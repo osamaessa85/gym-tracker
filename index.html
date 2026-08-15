@@ -36,6 +36,11 @@
     radial-gradient(circle at 15% 0%, rgba(255,107,26,0.08), transparent 45%),
     radial-gradient(circle at 100% 20%, rgba(79,176,198,0.06), transparent 40%);
 }
+.gt-root.ltr{ direction:ltr; font-family:'Tajawal',sans-serif; }
+.gt-langbtn{
+  background:var(--bg-card); border:1px solid var(--line); color:var(--text-muted);
+  font-size:11px; font-weight:700; padding:6px 10px; border-radius:8px; cursor:pointer; white-space:nowrap;
+}
 .gt-header{
   padding:22px 18px 16px;
   border-bottom:1px solid var(--line);
@@ -278,6 +283,8 @@
   const ROOT = document.getElementById('gtRoot');
 
   const WEEKDAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const WEEKDAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  function weekdayLabel(idx){ return isAr() ? WEEKDAYS[idx] : WEEKDAYS_EN[idx]; }
   const DEFAULT_DAYS = [6,1,3]; // Sat, Mon, Wed
 
   // ================= WORKOUT PROGRAM (continuous, evolving) =================
@@ -287,7 +294,7 @@
   //          repeats indefinitely — the program never "ends", it keeps rotating
   //          and the person keeps progressing weights based on logged performance.
   const WORKOUTS = {
-    full: { title:'فل بودي – تأسيس', level:1, cardio:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)', exercises:[
+    full: { title:'فل بودي – تأسيس', titleEn:'Full Body – Foundation', level:1, cardio:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)', exercises:[
       {name:'سكوات', sets:3, reps:'10-12'},
       {name:'بنش برس', sets:3, reps:'10-12'},
       {name:'سحب أرضي (Lat Pulldown)', sets:3, reps:'10-12'},
@@ -295,7 +302,7 @@
       {name:'كتف بالدمبل', sets:3, reps:'10-12'},
       {name:'بلانك', sets:3, reps:'30 ثانية'},
     ]},
-    upperA: { title:'Upper A – علوي', level:2, exercises:[
+    upperA: { title:'Upper A – علوي', titleEn:'Upper A', level:2, exercises:[
       {name:'بنش برس', sets:4, reps:'8-10'},
       {name:'سحب أفقي (Seated Row)', sets:4, reps:'10'},
       {name:'كتف بالدمبل (Overhead Press)', sets:3, reps:'10'},
@@ -303,7 +310,7 @@
       {name:'بايسبس دمبل', sets:3, reps:'12'},
       {name:'ترايسبس Pushdown', sets:3, reps:'12'},
     ]},
-    lowerA: { title:'Lower A – سفلي', level:2, exercises:[
+    lowerA: { title:'Lower A – سفلي', titleEn:'Lower A', level:2, exercises:[
       {name:'سكوات', sets:4, reps:'8-10'},
       {name:'رفعة ميتة رومانية', sets:3, reps:'10'},
       {name:'لنجز', sets:3, reps:'12/رجل'},
@@ -311,7 +318,7 @@
       {name:'سمانة وقوف', sets:3, reps:'15'},
       {name:'بطن (Plank + Leg Raises)', sets:3, reps:'-'},
     ]},
-    upperB: { title:'Upper B – علوي (تنويع)', level:2, exercises:[
+    upperB: { title:'Upper B – علوي (تنويع)', titleEn:'Upper B (variation)', level:2, exercises:[
       {name:'بنش مائل (Incline)', sets:4, reps:'8-10'},
       {name:'سحب بالكابل (Cable Row)', sets:4, reps:'10'},
       {name:'رفرفة جانبية', sets:3, reps:'12'},
@@ -319,7 +326,7 @@
       {name:'هامر كيرل', sets:3, reps:'12'},
       {name:'ترايسبس فوق الرأس', sets:3, reps:'12'},
     ]},
-    lowerB: { title:'Lower B – سفلي (تنويع)', level:2, exercises:[
+    lowerB: { title:'Lower B – سفلي (تنويع)', titleEn:'Lower B (variation)', level:2, exercises:[
       {name:'ليج بريس', sets:4, reps:'10'},
       {name:'ديدليفت تقليدي (خفيف)', sets:3, reps:'8'},
       {name:'سكوات بلغاري', sets:3, reps:'10/رجل'},
@@ -327,7 +334,7 @@
       {name:'سمانة جلوس', sets:3, reps:'15'},
       {name:'رفع رجل معلق', sets:3, reps:'12'},
     ]},
-    pushA: { title:'Push A – دفع (صدر/كتف/ترايسبس)', level:3, exercises:[
+    pushA: { title:'Push A – دفع (صدر/كتف/ترايسبس)', titleEn:'Push A (Chest/Shoulders/Triceps)', level:3, exercises:[
       {name:'بنش برس', sets:4, reps:'6-8'},
       {name:'كتف بالدمبل (Overhead Press)', sets:4, reps:'8-10'},
       {name:'بنش مائل (Incline)', sets:3, reps:'10'},
@@ -335,7 +342,7 @@
       {name:'ترايسبس Pushdown', sets:3, reps:'12'},
       {name:'تمديد فرنسي (Skull Crusher)', sets:3, reps:'10'},
     ]},
-    pullA: { title:'Pull A – سحب (ظهر/باي)', level:3, exercises:[
+    pullA: { title:'Pull A – سحب (ظهر/باي)', titleEn:'Pull A (Back/Biceps)', level:3, exercises:[
       {name:'ديدليفت تقليدي (خفيف)', sets:4, reps:'6-8'},
       {name:'سحب أرضي (Lat Pulldown)', sets:4, reps:'10'},
       {name:'تجديف بالبار (Barbell Row)', sets:3, reps:'10'},
@@ -343,7 +350,7 @@
       {name:'بايسبس بار (Barbell Curl)', sets:3, reps:'10'},
       {name:'هامر كيرل', sets:3, reps:'12'},
     ]},
-    legsA: { title:'Legs A – رجل', level:3, exercises:[
+    legsA: { title:'Legs A – رجل', titleEn:'Legs A', level:3, exercises:[
       {name:'سكوات', sets:4, reps:'6-8'},
       {name:'رفعة ميتة رومانية', sets:3, reps:'10'},
       {name:'ليج بريس', sets:3, reps:'12'},
@@ -351,7 +358,7 @@
       {name:'سمانة وقوف', sets:4, reps:'15'},
       {name:'بلانك', sets:3, reps:'40 ثانية'},
     ]},
-    pushB: { title:'Push B – دفع (تنويع)', level:3, exercises:[
+    pushB: { title:'Push B – دفع (تنويع)', titleEn:'Push B (variation)', level:3, exercises:[
       {name:'ديبس صدر (Chest Dips)', sets:3, reps:'8-10'},
       {name:'ارنولد برس (Arnold Press)', sets:4, reps:'10'},
       {name:'تفتيح صدر بالدمبل (Dumbbell Flyes)', sets:3, reps:'12'},
@@ -359,7 +366,7 @@
       {name:'ترايسبس فوق الرأس', sets:3, reps:'12'},
       {name:'ضغط ضيق (Close-Grip Bench)', sets:3, reps:'10'},
     ]},
-    pullB: { title:'Pull B – سحب (تنويع)', level:3, exercises:[
+    pullB: { title:'Pull B – سحب (تنويع)', titleEn:'Pull B (variation)', level:3, exercises:[
       {name:'عقلة مساعدة (Assisted Pull-up)', sets:4, reps:'8-10'},
       {name:'سحب أفقي (Seated Row)', sets:4, reps:'10'},
       {name:'سحب مستقيم للأسفل (Straight Arm Pulldown)', sets:3, reps:'12'},
@@ -367,7 +374,7 @@
       {name:'كيرل تركيز (Concentration Curl)', sets:3, reps:'12'},
       {name:'رفع رجل معلق', sets:3, reps:'12'},
     ]},
-    legsB: { title:'Legs B – رجل (تنويع)', level:3, exercises:[
+    legsB: { title:'Legs B – رجل (تنويع)', titleEn:'Legs B (variation)', level:3, exercises:[
       {name:'سكوات جوبلت (Goblet Squat)', sets:4, reps:'10'},
       {name:'سكوات بلغاري', sets:3, reps:'10/رجل'},
       {name:'هيب ثرست (Hip Thrust)', sets:3, reps:'12'},
@@ -379,6 +386,29 @@
   const CYCLE2 = ['upperA','lowerA','upperB','lowerB'];
   const CYCLE3 = ['pushA','pullA','legsA','pushB','pullB','legsB'];
   const COMPOUND_LIFTS = ['سكوات','بنش برس','رفعة ميتة رومانية','ديدليفت تقليدي (خفيف)','ليج بريس','سكوات أمامي','سكوات جوبلت (Goblet Squat)','هيب ثرست (Hip Thrust)','بنش مائل (Incline)','تجديف بالبار (Barbell Row)'];
+
+  // ================= Age & experience-adaptive program profile =================
+  // Combines training history (new / returning after a break / already active)
+  // with age to decide: how long the foundation phase lasts, how much time +
+  // consistency is needed to unlock the advanced level, and how conservative
+  // weight-progression suggestions should be.
+  function computeProfile(ob){
+    const exp = (ob && ob.experience) || 'returning';
+    const age = parseInt(ob && ob.age) || 30;
+    let foundationWeeks, level3WeekMin, level3SessionsMin;
+    if (exp === 'active'){ foundationWeeks = 1; level3WeekMin = 5; level3SessionsMin = 12; }
+    else if (exp === 'new'){ foundationWeeks = 4; level3WeekMin = 12; level3SessionsMin = 24; }
+    else { foundationWeeks = 3; level3WeekMin = 10; level3SessionsMin = 20; } // returning after a break
+
+    let incrementScale = 1;
+    if (age >= 50){ foundationWeeks += 2; level3WeekMin += 3; incrementScale = 0.5; }
+    else if (age >= 40){ foundationWeeks += 1; level3WeekMin += 1; incrementScale = 0.75; }
+    else if (age < 22){ incrementScale = 1.25; }
+
+    return { foundationWeeks, level3WeekMin, level3SessionsMin, incrementScale, exp, age };
+  }
+  function currentProfile(){ return computeProfile(onboarding); }
+
 
   // ================= Illustrated technique diagrams =================
   // Filled "human" limb: a rounded capsule with dark outline, drawn as two
@@ -639,7 +669,8 @@
   };
 
   // ================= Exercise technique library (comprehensive) =================
-  const CATEGORIES = {chest:'صدر', back:'ظهر', shoulders:'كتف', arms:'ذراع', legs:'رجل', core:'بطن'};
+  const CATEGORY_KEYS = ['chest','back','shoulders','arms','legs','core'];
+  function catLabel(key){ return t(key+'Cat'); }
 
   const EXERCISE_INFO = {
     // ---- CHEST ----
@@ -862,6 +893,62 @@
       mistakes:['استخدام الذراعين للسحب بدل البطن.','ثني الحوض بدل الجذع.'] },
   };
   function exInfo(name){ return EXERCISE_INFO[name] || null; }
+  const EXERCISE_INFO_EN = {
+    'بنش برس': { name:'Flat Barbell Bench Press', steps:['Lie on the bench with feet flat on the floor.', 'Grip the bar slightly wider than shoulder-width.', 'Lower the bar slowly to mid-chest.', 'Press up without locking the elbows hard.'], angles:['At the bottom, elbow angle is about 75-90°.', 'Elbows sit at about 45° from the torso, not flared straight out.'], mistakes:['Lifting your hips off the bench.', 'Dropping the bar too fast without control.'] },
+    'بنش مائل (Incline)': { name:'Incline Bench Press', steps:['Lie on a 30-45° incline bench.', 'Grip the bar or dumbbells at shoulder width.', 'Lower slowly to the upper chest, then press up.'], angles:['Bench angle 30-45° — steeper turns it into a shoulder press.', 'Elbow angle at the bottom is about 75-90°.'], mistakes:['Bench angle too steep.', 'Dropping the weight fast without control.'] },
+    'بنش منحدر (Decline)': { name:'Decline Bench Press', steps:['Lie on a decline bench with feet secured at the top.', 'Grip the bar slightly wider than shoulder-width.', 'Lower to the lower chest, then press up.'], angles:['Elbow angle at the bottom is about 75-90°.', 'Bar path is nearly vertical over the lower chest.'], mistakes:['Dropping fast without control.', 'Body shifting on the bench during the press.'] },
+    'تفتيح صدر بالدمبل (Dumbbell Flyes)': { name:'Dumbbell Flyes', steps:['Lie on the bench with a dumbbell in each hand above the chest.', 'Open the arms out to the sides with a slight elbow bend.', 'Bring the dumbbells back up in a hugging motion.'], angles:['Keep the elbow bend constant and slight throughout — it should not change.', 'Arms open to about chest level, not deeper.'], mistakes:['Fully straightening the elbow turns it into a press.', 'Going too deep stresses the shoulder.'] },
+    'ضغط الصدر (Push-up)': { name:'Push-up', steps:['Start in a plank with hands slightly wider than shoulders.', 'Lower the body as one unit until the chest is near the floor.', 'Push back up to full extension.'], angles:['Straight line from shoulder to ankle throughout.', 'Elbow angle at the bottom is about 90°.'], mistakes:['Letting the hips sag.', 'Piking the hips up.'] },
+    'كروس كيبل (Cable Crossover)': { name:'Cable Crossover', steps:['Stand centered between the cable machines, one handle per hand.', 'Pull the handles forward and down in an arcing motion.', 'Hands meet in front of the body with a slight elbow bend.'], angles:['Keep the elbow bend constant throughout.', 'Torso leans slightly forward.'], mistakes:['Using weight too heavy, making the motion jerky.', 'Fully locking out the elbow.'] },
+    'ديبس صدر (Chest Dips)': { name:'Chest Dips', steps:['Support yourself on parallel bars, torso leaning slightly forward.', 'Lower until the elbow reaches about 90°.', 'Press back up to full extension.'], angles:['Leaning the torso forward shifts emphasis onto the chest.', 'Elbow angle at the bottom is about 90°.'], mistakes:['Going too deep stresses the shoulder.', 'Staying fully upright shifts focus to triceps only.'] },
+    'سحب أرضي (Lat Pulldown)': { name:'Lat Pulldown', steps:['Sit and secure your knees under the pad.', 'Grip the bar wider than shoulder-width.', 'Pull the bar down to the upper chest while opening the chest.', 'Return slowly with full control.'], angles:['Elbows travel down and back, not out to the sides.', 'Torso leans back only slightly.'], mistakes:['Pulling the bar behind the neck.', 'Using body momentum instead of back muscles.'] },
+    'سحب علوي (Lat Pulldown)': { name:'Lat Pulldown', steps:['Sit and secure your knees, grip the bar wider than shoulder-width.', 'Pull the bar down to the upper chest, opening the chest forward.', 'Return slowly with full control.'], angles:['Elbows travel down and back.', 'Torso leans back only slightly.'], mistakes:['Pulling the bar behind the neck.', 'Using body momentum.'] },
+    'سحب أفقي (Seated Row)': { name:'Seated Cable Row', steps:['Sit and brace your feet, grip the handle with arms extended.', 'Pull the handle toward your abdomen, opening the chest and squeezing your shoulder blades.', 'Return slowly to the extended position.'], angles:['Elbow angle at the end of the pull is about 90°.', 'Back stays straight throughout, no swinging.'], mistakes:['Using torso swing instead of back muscles.', 'Shrugging the shoulders up toward the ears.'] },
+    'سحب بالكابل (Cable Row)': { name:'Cable Row', steps:['Sit in front of the cable machine, feet braced.', 'Pull the handle toward your abdomen, squeezing your shoulder blades together.', 'Return slowly to the extended position.'], angles:['Elbow angle at the end of the pull is about 90°.', 'Back stays straight, no swinging.'], mistakes:['Torso rocking forward and back.', 'Shrugging the shoulders up.'] },
+    'تجديف بالبار (Barbell Row)': { name:'Barbell Row', steps:['Stand bent forward at the hips, grip the barbell with a straight back.', 'Pull the bar up toward the lower abdomen, elbows close to the body.', 'Lower slowly with full control.'], angles:['Torso leans forward about 45°.', 'Elbows stay close to the body during the pull.'], mistakes:['Rounding the lower back.', 'Using body swing to pull.'] },
+    'رفعة ميتة رومانية': { name:'Romanian Deadlift', steps:['Stand with the bar or dumbbells in front of you, knees slightly bent.', 'Push the hips back while lowering the weight close to your legs.', 'Continue until you feel a stretch in your hamstrings.', 'Return to standing by driving the hips forward.'], angles:['Torso hinge from the hips is about 45-60°.', 'Knees stay fixed with a slight bend — the movement comes from the hips, not the knees.'], mistakes:['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'] },
+    'ديدليفت تقليدي (خفيف)': { name:'Conventional Deadlift (Light)', steps:['Stand with the bar close to your shins, hinge at the hips to grip it.', 'Drive through your heels, extending the hips and knees together.', 'Stand fully upright while bracing your torso.'], angles:['Back stays straight from start to finish.', 'The bar stays close to the body throughout the path.'], mistakes:['Rounding the lower back.', 'Letting the bar drift away from the body.'] },
+    'عقلة مساعدة (Assisted Pull-up)': { name:'Assisted Pull-up', steps:['Grip the bar wider than shoulder-width.', 'Pull your body up until your chin clears the bar.', 'Lower slowly with full control.'], angles:['Elbows travel down and back as you pull.'], mistakes:['Swinging the body to gain height.', 'Dropping down fast without control.'] },
+    'عقلة كاملة (Pull-up)': { name:'Pull-up', steps:['Grip the bar with a firm, wider-than-shoulder grip.', 'Pull your entire body up until your chin clears the bar.', 'Lower slowly to a full arm extension.'], angles:['Elbows travel down and back as you pull.'], mistakes:['Kipping/swinging unintentionally.', 'Not reaching full extension at the bottom.'] },
+    'سحب مستقيم للأسفل (Straight Arm Pulldown)': { name:'Straight Arm Pulldown', steps:['Stand in front of a high pulley with arms nearly straight.', 'Pull the bar down toward your thighs, keeping the arm mostly fixed.', 'Return slowly to the top.'], angles:['Keep a constant, slight elbow bend throughout.', 'Movement comes from the shoulder, not the elbow.'], mistakes:['Bending the elbow too much turns it into a triceps exercise.', 'Using weight too heavy, causing jerky motion.'] },
+    'هايبر اكستنشن (Back Extension)': { name:'Back Extension', steps:['Lie face down on the hyperextension bench, hips at the edge.', 'Lower your torso forward from the hips.', 'Raise your torso back up in line with your legs.'], angles:['The movement comes entirely from the hip joint — back stays straight throughout.'], mistakes:['Raising the torso above the straight line (hyperextending).', 'Rounding the lower back.'] },
+    'كتف بالدمبل': { name:'Dumbbell Shoulder Press', steps:['Stand or sit with a dumbbell in each hand at shoulder height.', 'Press the dumbbells up until the arms are nearly extended.', 'Lower slowly back to shoulder height.'], angles:['At the top, the elbow is nearly extended without locking hard.', 'Do not arch your back to help push.'], mistakes:['Using body momentum to push.', 'Locking the elbows out hard at the top.'] },
+    'كتف بالدمبل (Overhead Press)': { name:'Dumbbell Overhead Press', steps:['Stand with feet shoulder-width apart, dumbbells at shoulder height.', 'Press the dumbbells up in a straight line overhead.', 'Return with control to shoulder height.'], angles:['At the top, elbow is nearly extended without locking.', 'Wrists stay roughly above the elbows.'], mistakes:['Arching the lower back while pressing.', 'Pushing the weight forward instead of straight up.'] },
+    'ارنولد برس (Arnold Press)': { name:'Arnold Press', steps:['Sit or stand, dumbbells at shoulder height with palms facing you.', 'Press up while rotating your palms to face forward.', 'Reverse the same path back down.'], angles:['The rotation is gradual and smooth throughout the path.', 'At the top, elbow is nearly extended without locking hard.'], mistakes:['Rotating too fast without control.', 'Using body momentum.'] },
+    'رفرفة جانبية': { name:'Lateral Raise', steps:['Stand with a dumbbell in each hand at your sides.', 'Raise your arms out to the sides up to about shoulder height.', 'Lower slowly back to the start.'], angles:['Arms rise to about shoulder height, not higher.', 'Keep a slight, constant elbow bend throughout.'], mistakes:['Using body momentum to lift.', 'Raising the arm well above shoulder height.'] },
+    'رفرفة أمامية (Front Raise)': { name:'Front Raise', steps:['Stand with a dumbbell in each hand in front of your thighs.', 'Raise one arm forward to shoulder height.', 'Lower slowly and repeat with the other arm.'], angles:['Arm rises to shoulder height only, in a straight line forward.', 'Keep a slight, constant elbow bend.'], mistakes:['Using torso swing to lift.', 'Raising the arm above shoulder height.'] },
+    'رفرفة خلفية (Rear Delt Fly)': { name:'Rear Delt Fly', steps:['Bend forward at the hips holding light dumbbells under your chest.', 'Raise your arms out to the sides, squeezing your shoulder blades together.', 'Lower slowly back to the start.'], angles:['Torso leans forward about 45-60°.', 'Keep a slight, constant elbow bend throughout.'], mistakes:['Raising the torso during the movement.', 'Using momentum instead of the rear delts.'] },
+    'سحب علوي للكتف (Upright Row)': { name:'Upright Row', steps:['Stand with the bar or dumbbell in front of your thighs.', 'Pull straight up close to the body to about chest height, elbows leading high.', 'Lower slowly back down.'], angles:['Elbows stay higher than the hands throughout the pull.', 'Do not raise above shoulder height.'], mistakes:['Pulling too high, stressing the shoulder.', 'Using weight too heavy, causing swinging.'] },
+    'رفع أكتاف (Shrugs)': { name:'Shrugs', steps:['Stand holding dumbbells or a bar at your sides.', 'Raise your shoulders straight up toward your ears as far as possible.', 'Lower slowly back to the start.'], angles:['The movement is straight up and down only, no shoulder rolling.'], mistakes:['Rolling the shoulders instead of a straight lift.', 'Using body momentum.'] },
+    'بايسبس دمبل': { name:'Dumbbell Curl', steps:['Stand with a dumbbell in each hand, elbows fixed at your sides.', 'Curl the dumbbell up toward your shoulder.', 'Lower slowly back to the start.'], angles:['The elbow stays fixed in place throughout — only the forearm moves.'], mistakes:['Swinging the elbow forward.', 'Using body momentum to lift.'] },
+    'هامر كيرل': { name:'Hammer Curl', steps:['Stand with a dumbbell in each hand, palms facing in.', 'Curl the dumbbell up with elbows fixed at your sides.', 'Lower slowly to the start.'], angles:['The elbow stays fixed at your side throughout the movement.'], mistakes:['Moving the elbow forward.', 'Using body momentum.'] },
+    'بايسبس بار (Barbell Curl)': { name:'Barbell Curl', steps:['Stand holding a straight bar with an underhand grip.', 'Curl the bar up toward your chest, elbows fixed at your sides.', 'Lower slowly to the start.'], angles:['Elbows stay fixed at your sides throughout the movement.'], mistakes:['Using back swing to lift heavier weight.', 'Flaring the elbows forward.'] },
+    'كيرل تركيز (Concentration Curl)': { name:'Concentration Curl', steps:['Sit leaning forward, brace one elbow against your inner thigh.', 'Curl the dumbbell up toward your shoulder.', 'Lower slowly with full control.'], angles:['The elbow stays completely fixed against your thigh throughout.'], mistakes:['Letting the elbow drift off your thigh.', 'Using shoulder momentum.'] },
+    'كيرل كابل (Cable Curl)': { name:'Cable Curl', steps:['Stand in front of a low cable pulley, grip the handle.', 'Curl the handle up toward your chest, elbows fixed at your sides.', 'Lower slowly to the start.'], angles:['Elbows stay fixed at your sides throughout the movement.'], mistakes:['Rocking your body back and forth.', 'Flaring the elbows out to the sides.'] },
+    'ترايسبس Pushdown': { name:'Triceps Pushdown', steps:['Stand in front of a high cable pulley, elbows fixed at your sides.', 'Push the bar straight down until your arms are fully extended.', 'Return slowly to the start.'], angles:['Elbows stay fixed at your sides throughout.', 'Full extension at the bottom without a hard lock.'], mistakes:['Moving your elbows forward or backward.', 'Using your whole body to push.'] },
+    'ترايسبس فوق الرأس': { name:'Overhead Triceps Extension', steps:['Hold a dumbbell with both hands behind your head.', 'Extend your arms straight up overhead.', 'Lower slowly with full control.'], angles:['Elbows point forward, fixed close to your head throughout.'], mistakes:['Flaring the elbows out to the sides.', 'Moving the shoulder instead of just the forearm.'] },
+    'تمديد فرنسي (Skull Crusher)': { name:'Skull Crusher', steps:['Lie on a bench, arms extended straight up holding a bar.', 'Lower the bar toward your forehead by bending only the elbows.', 'Press back up to full extension.'], angles:['Elbows stay fixed, pointing up, throughout the movement.', 'Movement comes only from the elbow joint.'], mistakes:['Moving your elbows backward or forward.', 'Lowering the weight too fast toward your head.'] },
+    'ضغط ضيق (Close-Grip Bench)': { name:'Close-Grip Bench Press', steps:['Lie on the bench, grip the bar narrower than shoulder-width.', 'Lower the bar to mid-chest, elbows close to your body.', 'Press back up, focusing on the triceps.'], angles:['Elbows stay close to your body throughout the movement.'], mistakes:['Gripping too narrow strains the wrist.', 'Flaring the elbows like a regular bench press.'] },
+    'سكوات': { name:'Squat', steps:['Stand with feet shoulder-width apart, toes turned slightly out.', 'Sit back and down as if sitting in a chair, keeping your chest up.', 'Lower until your thighs are roughly parallel to the floor.', 'Drive through your heels back to standing.'], angles:['At the bottom, the knee angle is about 90°.', 'Knees should not travel far past your toes.', 'Back stays straight throughout, no rounding.'], mistakes:['Heels lifting off the floor.', 'Excessive forward lean of the torso.'] },
+    'سكوات أمامي (Front Squat)': { name:'Front Squat', steps:['Rack the bar across the front of your shoulders, elbows raised forward.', 'Squat down with a more upright torso than a back squat.', 'Drive through your heels back to standing.'], angles:['Torso stays closer to vertical compared to a back squat.', 'At the bottom, knee angle is about 90°.'], mistakes:['Letting the elbows drop loses bar balance.', 'Leaning the torso too far forward.'] },
+    'سكوات جوبلت (Goblet Squat)': { name:'Goblet Squat', steps:['Hold one dumbbell with both hands in front of your chest.', 'Squat down while keeping your torso as upright as possible.', 'Drive through your heels back to standing.'], angles:['Torso stays upright throughout.', 'At the bottom, knee angle is about 90° or deeper depending on mobility.'], mistakes:['Torso leaning forward due to the dumbbell\'s weight.', 'Heels lifting off the floor.'] },
+    'ليج بريس': { name:'Leg Press', steps:['Sit on the machine with feet shoulder-width apart on the platform.', 'Lower the platform until your knee reaches about 90°.', 'Press back up without locking your knees.'], angles:['At the bottom, knee angle is about 90°.', 'Do not fully lock your knees at the top.'], mistakes:['Lifting your lower back off the seat.', 'Locking your knees hard at the top.'] },
+    'لنجز': { name:'Lunge', steps:['Step forward into a wide stride.', 'Lower until your back knee is close to the floor.', 'Push through your front leg back to standing.'], angles:['Front knee angle is about 90°, not traveling far past your toes.', 'Torso stays upright throughout.'], mistakes:['Taking too short a step, stressing the knee.', 'Leaning the torso too far forward.'] },
+    'سكوات بلغاري': { name:'Bulgarian Split Squat', steps:['Rest the top of your back foot on a raised bench behind you.', 'Lower with your front leg until your thigh is roughly parallel to the floor.', 'Push through your front leg back up.'], angles:['Front knee angle is about 90° at the bottom.', 'Torso stays roughly upright throughout.'], mistakes:['Placing your back foot too far or too close.', 'Leaning the torso too far forward.'] },
+    'ليج إكستنشن': { name:'Leg Extension', steps:['Sit on the machine with your knees at 90°.', 'Extend your knees up until nearly straight.', 'Lower slowly back to the start.'], angles:['Full extension at the top without a sudden hard lock.'], mistakes:['Using momentum instead of controlled movement.', 'Lifting your hips off the seat.'] },
+    'ليج كيرل (Leg Curl)': { name:'Leg Curl', steps:['Lie face down on the machine, pad behind your ankles.', 'Curl your heels up toward your glutes.', 'Lower slowly back to the start.'], angles:['Full knee flexion at the top without lifting your hips.'], mistakes:['Lifting your hips off the machine.', 'Using momentum instead of control.'] },
+    'هيب ثرست (Hip Thrust)': { name:'Hip Thrust', steps:['Rest your upper back on a bench, bar over your hips, knees bent.', 'Drive your hips up until your torso and thighs form a straight line.', 'Lower slowly back to the start.'], angles:['At the top, straight line from shoulder to knee.', 'Knee angle is about 90°.'], mistakes:['Hyperextending your lower back at the top.', 'Pushing with your legs instead of your hips.'] },
+    'سمانة وقوف': { name:'Standing Calf Raise', steps:['Stand with feet shoulder-width apart.', 'Rise up onto your toes as high as possible.', 'Lower slowly back to the start.'], angles:['Full heel rise at the top, with a brief pause.'], mistakes:['Fast, uncontrolled movement.', 'Bending your knees during the movement.'] },
+    'سمانة جلوس': { name:'Seated Calf Raise', steps:['Sit on the machine with your knees under the pad.', 'Rise up onto your toes as high as possible.', 'Lower slowly back to the start.'], angles:['Full heel rise at the top, with a brief pause.'], mistakes:['Fast movement without control.', 'Short, incomplete range of motion.'] },
+    'ستيب أب (Step-up)': { name:'Step-up', steps:['Place one foot on a raised platform or bench.', 'Push through that leg to lift your whole body up.', 'Lower slowly back to your starting leg.'], angles:['Front knee angle is about 90° at the start.'], mistakes:['Pushing off with the back leg instead of the front.', 'Platform too high, straining the knee.'] },
+    'بلانك': { name:'Plank', steps:['Lie face down, then raise your body onto your forearms and toes.', 'Keep your body in one straight line from shoulder to ankle.', 'Brace your core and glutes, breathing steadily.'], angles:['A straight line from shoulder to ankle, no sagging or piking hips.'], mistakes:['Raising your hips too high.', 'Letting your hips sag down.'] },
+    'بطن (Plank + Leg Raises)': { name:'Plank + Leg Raises', steps:['Start in a forearm plank.', 'Raise one leg slowly without breaking your straight line.', 'Alternate legs with control.'], angles:['Hips stay level, no sideways tilt when raising a leg.'], mistakes:['Hips tilting when you raise a leg.', 'Lower back sagging.'] },
+    'رفع رجل معلق': { name:'Hanging Leg Raise', steps:['Hang from a pull-up bar with a firm grip.', 'Raise your knees toward your chest with control.', 'Lower slowly without swinging your body.'], angles:['Hips tilt slightly back as you raise your knees, no swinging.'], mistakes:['Using body momentum to lift.', 'Dropping down fast without control.'] },
+    'لف روسي (Russian Twist)': { name:'Russian Twist', steps:['Sit with knees bent, torso leaning back slightly.', 'Twist your torso to one side, then the other, with control.', 'Keep your core braced throughout.'], angles:['Torso leans back at a fixed angle — the movement is the twist only.'], mistakes:['Twisting with just your arms instead of your torso.', 'Moving too fast without control.'] },
+    'بلانك جانبي (Side Plank)': { name:'Side Plank', steps:['Lie on your side, then raise your body onto one forearm.', 'Keep your body in a straight diagonal line from shoulder to ankles.', 'Hold the position, bracing your waist.'], angles:['A single straight line, no sagging hips.'], mistakes:['Hips sagging down.', 'Torso leaning forward or backward.'] },
+    'كرنش كابل (Cable Crunch)': { name:'Cable Crunch', steps:['Kneel in front of a high cable pulley with the rope behind your neck.', 'Curl your torso down from the hips, crunching your abs.', 'Return slowly to the start.'], angles:['The movement is a spinal curl (abs), not a hip hinge.'], mistakes:['Pulling with your arms instead of your abs.', 'Bending at the hips instead of curling your spine.'] },
+  };
+  Object.keys(EXERCISE_INFO_EN).forEach(k=>{ if (EXERCISE_INFO[k]) EXERCISE_INFO[k].en = EXERCISE_INFO_EN[k]; });
 
   // ================= State =================
   let onboarding = null;
@@ -869,6 +956,101 @@
   let activeTab = 'today';
   let allLogsCache = [];   // [{date, data}] sorted desc by date
   let completedCount = 0;
+  let LANG = 'ar';
+
+  // ================= i18n =================
+  const UI = {
+    ar: {
+      appName:'برنامج العودة للحديد', tagline:'مدربك الشخصي على جوالك',
+      tabToday:'اليوم', tabProgram:'البرنامج', tabLibrary:'المكتبة', tabProgress:'التقدم', tabHistory:'السجل',
+      logout:'خروج', devCredit:'Developed & Owned by Osama Esa',
+      today:'اليوم', restDay:'يوم راحة', restMsg:'خلي العضلات تتعافى. لو تحب، امشِ 15 دقيقة خفيفة.',
+      beforeStart:'قبل بداية البرنامج', beforeStartMsg:'البرنامج يبدأ بتاريخ لاحق، تصفح "البرنامج" لمعرفة التفاصيل.',
+      setsOf:'من', setsWord:'مجموعة', weightKg:'الوزن (كغ)', reps:'التكرار',
+      technique:'ℹ️ الطريقة', howTo:'طريقة الأداء', correctAngles:'🎯 الزوايا الصحيحة', commonMistakes:'⚠️ أخطاء شائعة',
+      finishWorkout:'إنهاء التمرين', doneWorkout:'✓ تم إنهاء التمرين',
+      cardioNote:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)',
+      searchExercise:'ابحث عن تمرين...', all:'الكل', exerciseCount:'تمرين',
+      editSettings:'⚙️ تعديل تاريخ البداية والإعدادات',
+      statsCompleted:'تمارين مكتملة', statsStreak:'سلسلة متتالية', statsWeek:'هذا الأسبوع', statsLastWeight:'آخر وزن (كغ)',
+      perfAnalysis:'📊 تحليل الأداء', perfEmpty:'بعد كم تمرين، بيظهر هنا تحليل لأدائك وأي تمرين يحتاج تصحيح.',
+      weightLog:'تسجيل الوزن', weightPlaceholder:'الوزن اليوم (كغ)', save:'حفظ', weightHint:'سجّل وزنك أسبوعياً لمتابعة تقدمك.',
+      noHistory:'لا يوجد سجل بعد', noHistoryMsg:'ابدأ تمرين اليوم وسيظهر هنا.',
+      completed:'مكتمل ✓', notCompleted:'غير مكتمل',
+      welcomeTitle:'يلا نرجع للحديد 💪', welcomeLead:'جاوب على كذا سؤال بسيط، وبنجهزلك برنامج كامل يستمر معك ويتطور مع تقدمك.',
+      editTitle:'تعديل إعدادات البرنامج ⚙️', editLead:'عدّل أي شي وبنحدّث برنامجك فوراً — سجلّك وتقدمك يضلوا محفوظين.',
+      startDateLabel:'تاريخ بداية البرنامج', editDateHint:'تقدر تغيّر هذا التاريخ وقت ما تحب — يعيد حساب أسبوعك ومستواك الحالي تلقائياً.',
+      closestDesc:'وش وصفك الأقرب؟',
+      expNew:'أول مرة أتمرن', expNewHint:'برنامج تأسيسي أطول وأكثر حذراً',
+      expReturning:'كنت أتمرن وانقطعت', expReturningHint:'رجوع تدريجي قبل الرجوع لمستواك',
+      expActive:'أتمرن حالياً بانتظام', expActiveHint:'تأسيس مختصر، ننتقل بسرعة أكبر',
+      trainingDaysLabel:'أيام التمرين في الأسبوع (يفضّل 3 أيام بالبداية)',
+      programHint:'البرنامج يبدأ بمرحلة تأسيس (فل بودي)، بعدها تقسيم علوي/سفلي، وبعدها Push/Pull/Legs — طول كل مرحلة يتحدد حسب عمرك وخبرتك، ويستمر يتطور معك بدون توقف.',
+      height:'الطول (سم)', weight:'الوزن (كغ)', age:'العمر',
+      startBtn:'ابدأ البرنامج', saveEditBtn:'حفظ التعديلات', cancelBtn:'إلغاء والرجوع',
+      chooseOneDay:'اختر يوم تمرين واحد على الأقل',
+      loginTitle:'تسجيل الدخول 🔐', loginLead:'هذا التطبيق خاص — سجّل دخولك بالحساب اللي انسوّى لك.',
+      email:'البريد الإلكتروني', password:'كلمة المرور', loginBtn:'دخول', loggingIn:'جارٍ الدخول...',
+      noAccount:'ما عندك حساب؟ تواصل مع مدير التطبيق يضيفك.',
+      fillFields:'عبي البريد وكلمة المرور.', wrongCreds:'بيانات الدخول غير صحيحة.', loginError:'صار خطأ، حاول مرة ثانية.',
+      progLevel1:'المستوى ١ · تأسيس', progLevel2:'المستوى ٢ · بناء (علوي/سفلي)', progLevel3:'المستوى ٣ · تقدم (Push/Pull/Legs)',
+      week:'الأسبوع', restTag:'راحة', beforeStartTag:'قبل البداية',
+      chestCat:'صدر', backCat:'ظهر', shouldersCat:'كتف', armsCat:'ذراع', legsCat:'رجل', coreCat:'بطن',
+    },
+    en: {
+      appName:'Back to Iron Program', tagline:'Your personal trainer, on your phone',
+      tabToday:'Today', tabProgram:'Program', tabLibrary:'Library', tabProgress:'Progress', tabHistory:'History',
+      logout:'Logout', devCredit:'Developed & Owned by Osama Esa',
+      today:'Today', restDay:'Rest Day', restMsg:'Let your muscles recover. If you like, take a light 15-minute walk.',
+      beforeStart:'Before program start', beforeStartMsg:'Your program starts on a later date — check the "Program" tab for details.',
+      setsOf:'of', setsWord:'sets', weightKg:'Weight (kg)', reps:'Reps',
+      technique:'ℹ️ Technique', howTo:'How to perform', correctAngles:'🎯 Correct angles', commonMistakes:'⚠️ Common mistakes',
+      finishWorkout:'Finish workout', doneWorkout:'✓ Workout finished',
+      cardioNote:'Light cardio 15–20 min (brisk walk / bike)',
+      searchExercise:'Search exercises...', all:'All', exerciseCount:'exercises',
+      editSettings:'⚙️ Edit start date & settings',
+      statsCompleted:'Workouts done', statsStreak:'Current streak', statsWeek:'This week', statsLastWeight:'Last weight (kg)',
+      perfAnalysis:'📊 Performance analysis', perfEmpty:'After a few workouts, your performance trends and tips will show up here.',
+      weightLog:'Log your weight', weightPlaceholder:"Today's weight (kg)", save:'Save', weightHint:'Log your weight weekly to track your progress.',
+      noHistory:'No history yet', noHistoryMsg:"Complete today's workout and it'll show up here.",
+      completed:'Done ✓', notCompleted:'Not completed',
+      welcomeTitle:'Let\'s get back to iron 💪', welcomeLead:'Answer a few quick questions and we\'ll build you a full program that grows with you.',
+      editTitle:'Edit program settings ⚙️', editLead:'Change anything and your program updates instantly — your log and progress stay saved.',
+      startDateLabel:'Program start date', editDateHint:'Change this anytime — your week and current level recalculate automatically.',
+      closestDesc:'Which best describes you?',
+      expNew:"First time training", expNewHint:'Longer, more cautious foundation phase',
+      expReturning:'Trained before, took a break', expReturningHint:'Gradual comeback before returning to your level',
+      expActive:'Currently training regularly', expActiveHint:'Short foundation, we move faster',
+      trainingDaysLabel:'Training days per week (3 days recommended to start)',
+      programHint:'The program starts with a foundation phase (full body), then an upper/lower split, then Push/Pull/Legs — each phase\'s length depends on your age and experience, and it keeps evolving with you without stopping.',
+      height:'Height (cm)', weight:'Weight (kg)', age:'Age',
+      startBtn:'Start program', saveEditBtn:'Save changes', cancelBtn:'Cancel & go back',
+      chooseOneDay:'Choose at least one training day',
+      loginTitle:'Sign In 🔐', loginLead:'This app is private — sign in with the account created for you.',
+      email:'Email', password:'Password', loginBtn:'Sign in', loggingIn:'Signing in...',
+      noAccount:"Don't have an account? Contact the app admin to get one.",
+      fillFields:'Please fill in email and password.', wrongCreds:'Invalid login credentials.', loginError:'Something went wrong, please try again.',
+      progLevel1:'Level 1 · Foundation', progLevel2:'Level 2 · Build (Upper/Lower)', progLevel3:'Level 3 · Advance (Push/Pull/Legs)',
+      week:'Week', restTag:'Rest', beforeStartTag:'Before start',
+      chestCat:'Chest', backCat:'Back', shouldersCat:'Shoulders', armsCat:'Arms', legsCat:'Legs', coreCat:'Core',
+    },
+  };
+  function t(key){ return (UI[LANG] && UI[LANG][key] !== undefined) ? UI[LANG][key] : (UI.ar[key] || key); }
+  function isAr(){ return LANG === 'ar'; }
+  function wkTitle(wk){ return (!isAr() && wk.titleEn) ? wk.titleEn : wk.title; }
+  function exName(key){ const info = EXERCISE_INFO[key]; return (!isAr() && info && info.en && info.en.name) ? info.en.name : key; }
+  function exField(key, field){
+    const info = EXERCISE_INFO[key];
+    if (!info) return [];
+    if (!isAr() && info.en && info.en[field]) return info.en[field];
+    return info[field] || [];
+  }
+  async function setLang(newLang){
+    LANG = newLang;
+    try{ await safeSet('lang', newLang); }catch(e){}
+    ROOT.classList.toggle('ltr', LANG==='en');
+    render();
+  }
 
   // ============ CLOUD MULTI-USER CONFIG (Supabase) ============
   // Fill these in after creating a free Supabase project — see SETUP.md.
@@ -994,11 +1176,11 @@
   function sameDay(a,b){return toKey(a)===toKey(b);}
   function addDays(d,n){const c=new Date(d); c.setDate(c.getDate()+n); return c;}
   function fmtLong(d){
-    try{ return d.toLocaleDateString('ar-KW',{weekday:'long', day:'numeric', month:'long'}); }
-    catch(e){ return WEEKDAYS[d.getDay()]+' '+d.getDate(); }
+    try{ return d.toLocaleDateString(isAr()?'ar-KW':'en-US',{weekday:'long', day:'numeric', month:'long'}); }
+    catch(e){ return weekdayLabel(d.getDay())+' '+d.getDate(); }
   }
   function fmtShort(d){
-    try{ return d.toLocaleDateString('ar-KW',{day:'numeric', month:'short'}); }
+    try{ return d.toLocaleDateString(isAr()?'ar-KW':'en-US',{day:'numeric', month:'short'}); }
     catch(e){ return d.getDate()+'/'+(d.getMonth()+1); }
   }
 
@@ -1042,10 +1224,11 @@
 
   // ================= Scheduling: continuous, evolving program =================
   function currentLevelForWeek(weekNum){
-    if (weekNum <= 3) return 1;
-    if (weekNum < 10) return 2;
+    const p = currentProfile();
+    if (weekNum <= p.foundationWeeks) return 1;
+    if (weekNum < p.level3WeekMin) return 2;
     // Level 3 unlocks once enough calendar time AND enough completed sessions
-    return completedCount >= 20 ? 3 : 2;
+    return completedCount >= p.level3SessionsMin ? 3 : 2;
   }
 
   function getDayInfo(target){
@@ -1057,16 +1240,17 @@
     const weekNum = Math.floor((t - start)/(7*86400000)) + 1;
     const isTraining = onboarding.days.includes(dow);
     const level = currentLevelForWeek(weekNum);
+    const p = currentProfile();
     let workoutType = null;
     if (isTraining){
       if (level === 1){
         workoutType = 'full';
       } else if (level === 2){
-        const refStart = addDays(start, 21); // start of week 4
+        const refStart = addDays(start, p.foundationWeeks*7); // start of week after foundation
         const count = countTrainingDaysBetween(refStart, t);
         workoutType = CYCLE2[(count-1+CYCLE2.length) % CYCLE2.length];
       } else {
-        const refStart = addDays(start, 63); // start of week 10 (cycling reference)
+        const refStart = addDays(start, p.level3WeekMin*7); // cycling reference
         const count = countTrainingDaysBetween(refStart, t);
         workoutType = CYCLE3[(count-1+CYCLE3.length) % CYCLE3.length];
       }
@@ -1088,9 +1272,10 @@
   }
 
   function levelBadge(level, weekNum){
-    if (level===1) return `<span class="gt-badge lvl1">المستوى ١ · تأسيس · الأسبوع ${weekNum}</span>`;
-    if (level===2) return `<span class="gt-badge lvl2">المستوى ٢ · بناء (علوي/سفلي) · الأسبوع ${weekNum}</span>`;
-    return `<span class="gt-badge lvl3">المستوى ٣ · تقدم (Push/Pull/Legs) · الأسبوع ${weekNum}</span>`;
+    const wk = `${t('week')} ${weekNum}`;
+    if (level===1) return `<span class="gt-badge lvl1">${t('progLevel1')} · ${wk}</span>`;
+    if (level===2) return `<span class="gt-badge lvl2">${t('progLevel2')} · ${wk}</span>`;
+    return `<span class="gt-badge lvl3">${t('progLevel3')} · ${wk}</span>`;
   }
 
   // ================= Progressive suggestion engine =================
@@ -1107,7 +1292,7 @@
     const maxW = Math.max(...doneSets.map(s=>parseFloat(s.weight)||0));
     const targetMin = parseInt((repsTarget.match(/\d+/)||['0'])[0]) || 0;
     const allMet = sets.length>0 && sets.every(s=> s.done && (parseInt(s.reps)||0) >= targetMin);
-    const increment = COMPOUND_LIFTS.includes(name) ? 2.5 : 1.25;
+    const increment = (COMPOUND_LIFTS.includes(name) ? 2.5 : 1.25) * currentProfile().incrementScale;
     const suggested = allMet ? Math.round((maxW+increment)*100)/100 : maxW;
     return { lastWeight:maxW, lastDate:last.date, suggested, improved: allMet };
   }
@@ -1155,12 +1340,15 @@
       const arr = byName[name].sort((a,b)=> a.date<b.date?1:-1);
       if (arr.length<2) return;
       const latest = arr[0], prev = arr[1];
-      let status='stable', icon='➡️', tip='أداء ثابت — جرب رفع الوزن تدريجياً القادم.';
-      if (latest.vol > prev.vol*1.05){ status='up'; icon='📈'; tip='تحسّن ملموس 👏 استمر بنفس الطريقة.'; }
+      let status='stable', icon='➡️', tip = isAr() ? 'أداء ثابت — جرب رفع الوزن تدريجياً القادم.' : 'Performance is stable — try a small weight increase next time.';
+      if (latest.vol > prev.vol*1.05){ status='up'; icon='📈'; tip = isAr() ? 'تحسّن ملموس 👏 استمر بنفس الطريقة.' : 'Solid improvement 👏 keep it up.'; }
       else if (latest.vol < prev.vol*0.95){
         status='down'; icon='📉';
         const info = exInfo(name);
-        tip = info && info.mistakes && info.mistakes.length ? ('انتبه: '+info.mistakes[0]) : 'راقب النوم والتغذية وقلل الشدة قليلاً هذه المرة.';
+        const mistakesList = exField(name,'mistakes');
+        tip = mistakesList.length
+          ? ((isAr()?'انتبه: ':'Watch out: ')+mistakesList[0])
+          : (isAr() ? 'راقب النوم والتغذية وقلل الشدة قليلاً هذه المرة.' : 'Check your sleep and nutrition, and ease up a bit this time.');
       }
       trends.push({name, status, icon, tip, latestDate:latest.date});
     });
@@ -1170,14 +1358,18 @@
 
   function render(){
     if (!onboarding){ renderOnboarding(); return; }
+    ROOT.classList.toggle('ltr', LANG==='en');
     ROOT.innerHTML = `
       <div class="gt-header">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <div class="gt-brand"><span class="dot"></span> برنامج العودة للحديد</div>
-            <div class="gt-sub">مدربك الشخصي على جوالك${currentUser ? ' · '+currentUser.email : ''}</div>
+            <div class="gt-brand"><span class="dot"></span> ${t('appName')}</div>
+            <div class="gt-sub">${t('tagline')}${currentUser ? ' · '+currentUser.email : ''}</div>
           </div>
-          ${currentUser ? `<button id="logoutBtn" style="background:var(--bg-card); border:1px solid var(--line); color:var(--text-faint); font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; white-space:nowrap;">خروج</button>` : ''}
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="gt-langbtn" id="langBtn">${isAr() ? 'EN' : 'عربي'}</button>
+            ${currentUser ? `<button id="logoutBtn" class="gt-langbtn">${t('logout')}</button>` : ''}
+          </div>
         </div>
       </div>
       <div class="gt-view active" id="viewToday"></div>
@@ -1186,19 +1378,20 @@
       <div class="gt-view" id="viewProgress"></div>
       <div class="gt-view" id="viewHistory"></div>
       <div class="gt-tabs">
-        <button class="gt-tab" data-tab="today"><span class="ic">🏋️</span>اليوم</button>
-        <button class="gt-tab" data-tab="program"><span class="ic">📅</span>البرنامج</button>
-        <button class="gt-tab" data-tab="library"><span class="ic">📖</span>المكتبة</button>
-        <button class="gt-tab" data-tab="progress"><span class="ic">📈</span>التقدم</button>
-        <button class="gt-tab" data-tab="history"><span class="ic">🗂️</span>السجل</button>
+        <button class="gt-tab" data-tab="today"><span class="ic">🏋️</span>${t('tabToday')}</button>
+        <button class="gt-tab" data-tab="program"><span class="ic">📅</span>${t('tabProgram')}</button>
+        <button class="gt-tab" data-tab="library"><span class="ic">📖</span>${t('tabLibrary')}</button>
+        <button class="gt-tab" data-tab="progress"><span class="ic">📈</span>${t('tabProgress')}</button>
+        <button class="gt-tab" data-tab="history"><span class="ic">🗂️</span>${t('tabHistory')}</button>
       </div>
-      <div style="text-align:center; padding:10px 0 0; font-size:10.5px; color:var(--text-faint);">تطوير وملكية: أسامة</div>
+      <div style="text-align:center; padding:10px 0 0; font-size:10.5px; color:var(--text-faint);">${t('devCredit')}</div>
     `;
     ROOT.querySelectorAll('.gt-tab').forEach(btn=>{
       btn.onclick = ()=>{ activeTab = btn.dataset.tab; renderTabs(); };
     });
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.onclick = logout;
+    document.getElementById('langBtn').onclick = ()=>{ setLang(isAr() ? 'en' : 'ar'); };
     renderTabs();
   }
 
@@ -1222,28 +1415,28 @@
     const el = document.getElementById('viewLibrary');
     const names = Object.keys(EXERCISE_INFO).filter(n=>{
       if (libCat!=='all' && EXERCISE_INFO[n].cat!==libCat) return false;
-      if (libFilter && !n.includes(libFilter)) return false;
+      if (libFilter && !n.includes(libFilter) && !(EXERCISE_INFO[n].en && EXERCISE_INFO[n].en.name.toLowerCase().includes(libFilter.toLowerCase()))) return false;
       return true;
     });
     let html = `
       <div class="gt-field" style="margin-bottom:10px;">
-        <input type="text" id="libSearch" placeholder="ابحث عن تمرين..." value="${libFilter}"/>
+        <input type="text" id="libSearch" placeholder="${t('searchExercise')}" value="${libFilter}"/>
       </div>
       <div class="gt-catbar" id="catBar">
-        <button class="gt-catchipbtn ${libCat==='all'?'sel':''}" data-cat="all">الكل</button>
-        ${Object.keys(CATEGORIES).map(c=>`<button class="gt-catchipbtn ${libCat===c?'sel':''}" data-cat="${c}">${CATEGORIES[c]}</button>`).join('')}
+        <button class="gt-catchipbtn ${libCat==='all'?'sel':''}" data-cat="all">${t('all')}</button>
+        ${CATEGORY_KEYS.map(c=>`<button class="gt-catchipbtn ${libCat===c?'sel':''}" data-cat="${c}">${catLabel(c)}</button>`).join('')}
       </div>
-      <div class="gt-libcount">${names.length} تمرين</div>
+      <div class="gt-libcount">${names.length} ${t('exerciseCount')}</div>
     `;
     if (!names.length){
-      html += `<div class="gt-card gt-restcard"><div class="em">🔍</div><h3>ما لقينا تمرين</h3></div>`;
+      html += `<div class="gt-card gt-restcard"><div class="em">🔍</div><h3>${isAr()?'ما لقينا تمرين':'No exercises found'}</h3></div>`;
     }
     names.forEach(name=>{
       const info = EXERCISE_INFO[name];
       html += `
         <div class="gt-card">
-          <div class="gt-exname"><span class="n">${name}</span></div>
-          <span class="gt-catchip">${CATEGORIES[info.cat]||''}</span>
+          <div class="gt-exname"><span class="n">${exName(name)}</span></div>
+          <span class="gt-catchip">${catLabel(info.cat)}</span>
           ${renderDetailPanel(name, true)}
         </div>
       `;
@@ -1318,21 +1511,26 @@
   function renderDetailPanel(name, alwaysOpen){
     const info = exInfo(name);
     if (!info) return '';
-    const steps = info.steps.map(s=>`<li>${s}</li>`).join('');
-    const angles = info.angles.map(s=>`<li>${s}</li>`).join('');
-    const mistakes = info.mistakes.map(s=>`<li>${s}</li>`).join('');
+    const steps = exField(name,'steps').map(s=>`<li>${s}</li>`).join('');
+    const angles = exField(name,'angles').map(s=>`<li>${s}</li>`).join('');
+    const mistakes = exField(name,'mistakes').map(s=>`<li>${s}</li>`).join('');
     const realImg = REAL_IMAGES[name];
     const visual = realImg
-      ? `<img src="${realImg}" alt="${name}" class="gt-realimg"/>`
+      ? `<img src="${realImg}" alt="${exName(name)}" class="gt-realimg"/>`
       : renderPoseSVG(info.pose);
     return `
       <div class="gt-exdetail" style="${alwaysOpen ? '' : 'display:none;'}">
         <div class="gt-posewrap">${visual}</div>
-        <div class="gt-detailsec"><h4>طريقة الأداء</h4><ul>${steps}</ul></div>
-        <div class="gt-detailsec"><h4>🎯 الزوايا الصحيحة</h4><ul class="angles">${angles}</ul></div>
-        <div class="gt-detailsec"><h4>⚠️ أخطاء شائعة</h4><ul class="mistakes">${mistakes}</ul></div>
+        <div class="gt-detailsec"><h4>${t('howTo')}</h4><ul>${steps}</ul></div>
+        <div class="gt-detailsec"><h4>${t('correctAngles')}</h4><ul class="angles">${angles}</ul></div>
+        <div class="gt-detailsec"><h4>${t('commonMistakes')}</h4><ul class="mistakes">${mistakes}</ul></div>
       </div>
     `;
+  }
+
+  function repsDisplay(reps){
+    if (isAr()) return reps;
+    return reps.replace('رجل','leg').replace('ثانية','sec');
   }
 
   async function renderToday(){
@@ -1343,17 +1541,17 @@
 
     let html = `
       <div class="gt-daynav">
-        <button id="prevDay">›</button>
+        <button id="prevDay">${isAr() ? '›' : '‹'}</button>
         <div class="lbl">
-          <div class="d1">${isToday ? 'اليوم' : fmtLong(viewDate)}</div>
+          <div class="d1">${isToday ? t('today') : fmtLong(viewDate)}</div>
           <div class="d2">${isToday ? fmtLong(viewDate) : ''}</div>
         </div>
-        <button id="nextDay">‹</button>
+        <button id="nextDay">${isAr() ? '‹' : '›'}</button>
       </div>
     `;
 
     if (!info || info.before){
-      html += `<div class="gt-card gt-restcard"><div class="em">⏳</div><h3>قبل بداية البرنامج</h3><p>البرنامج يبدأ بتاريخ لاحق، تصفح "البرنامج" لمعرفة التفاصيل.</p></div>`;
+      html += `<div class="gt-card gt-restcard"><div class="em">⏳</div><h3>${t('beforeStart')}</h3><p>${t('beforeStartMsg')}</p></div>`;
       el.innerHTML = html;
       bindDayNav();
       return;
@@ -1363,8 +1561,8 @@
       html += `
         <div class="gt-card gt-restcard">
           <div class="em">💤</div>
-          <h3>يوم راحة</h3>
-          <p>خلي العضلات تتعافى. لو تحب، امشِ 15 دقيقة خفيفة.</p>
+          <h3>${t('restDay')}</h3>
+          <p>${t('restMsg')}</p>
           ${levelBadge(info.level, info.weekNum)}
         </div>
       `;
@@ -1400,8 +1598,8 @@
             <div class="pct">${pct}%</div>
           </div>
           <div class="gt-gaugeinfo">
-            <div class="t1">${wk.title}</div>
-            <div class="t2">${doneSets} من ${totalSets} مجموعة</div>
+            <div class="t1">${wkTitle(wk)}</div>
+            <div class="t2">${doneSets} ${t('setsOf')} ${totalSets} ${t('setsWord')}</div>
             ${levelBadge(info.level, info.weekNum)}
           </div>
         </div>
@@ -1411,7 +1609,7 @@
     if (wk.cardio){
       html += `
         <div class="gt-cardio">
-          <span>🚶‍♂️ ${wk.cardio}</span>
+          <span>🚶‍♂️ ${t('cardioNote')}</span>
           <div class="gt-check ${log.cardioDone?'done':''}" id="cardioCheck">${log.cardioDone?'✓':''}</div>
         </div>
       `;
@@ -1423,24 +1621,24 @@
       const sug = isFresh ? suggestForExercise(ex.name, ex.reps, dateKey) : null;
       html += `<div class="gt-exercise">
         <div class="gt-exname">
-          <span class="n">${ex.name}</span>
+          <span class="n">${exName(ex.name)}</span>
           <span style="display:flex; align-items:center; gap:8px;">
-            <span class="r">${ex.sets} × ${ex.reps}</span>
-            <button class="gt-infobtn" type="button">ℹ️ الطريقة</button>
+            <span class="r">${ex.sets} × ${repsDisplay(ex.reps)}</span>
+            <button class="gt-infobtn" type="button">${t('technique')}</button>
           </span>
         </div>`;
       if (sug){
         html += sug.improved
-          ? `<div class="gt-suggest">📊 آخر مرة ${sug.lastWeight}كغ واكتملت — 🎯 جرّب اليوم ${sug.suggested}كغ</div>`
-          : `<div class="gt-suggest">📊 آخر مرة ${sug.lastWeight}كغ — كمّل نفس الوزن وركّز على التكرارات</div>`;
+          ? `<div class="gt-suggest">📊 ${isAr()?`آخر مرة ${sug.lastWeight}كغ واكتملت — 🎯 جرّب اليوم ${sug.suggested}كغ`:`Last time ${sug.lastWeight}kg, all sets hit — 🎯 try ${sug.suggested}kg today`}</div>`
+          : `<div class="gt-suggest">📊 ${isAr()?`آخر مرة ${sug.lastWeight}كغ — كمّل نفس الوزن وركّز على التكرارات`:`Last time ${sug.lastWeight}kg — keep the same weight and focus on reps`}</div>`;
       }
       for(let i=0;i<ex.sets;i++){
         const s = arr[i] || {weight:'',reps:'',done:false};
         html += `
           <div class="gt-setrow" data-ex="${exi}" data-set="${i}">
             <div class="snum">${i+1}</div>
-            <div class="col"><label>الوزن (كغ)</label><input type="number" inputmode="decimal" class="wInput" value="${s.weight}" placeholder="0"/></div>
-            <div class="col"><label>التكرار</label><input type="number" inputmode="numeric" class="rInput" value="${s.reps}" placeholder="${ex.reps.split('-')[0].replace(/\D/g,'')||''}"/></div>
+            <div class="col"><label>${t('weightKg')}</label><input type="number" inputmode="decimal" class="wInput" value="${s.weight}" placeholder="0"/></div>
+            <div class="col"><label>${t('reps')}</label><input type="number" inputmode="numeric" class="rInput" value="${s.reps}" placeholder="${ex.reps.split('-')[0].replace(/\D/g,'')||''}"/></div>
             <div class="gt-check ${s.done?'done':''}">${s.done?'✓':''}</div>
           </div>
         `;
@@ -1449,7 +1647,7 @@
       html += `</div>`;
     });
     html += `
-        <button class="gt-finishbtn ${log.completed?'done':''}" id="finishBtn">${log.completed ? '✓ تم إنهاء التمرين' : 'إنهاء التمرين'}</button>
+        <button class="gt-finishbtn ${log.completed?'done':''}" id="finishBtn">${log.completed ? t('doneWorkout') : t('finishWorkout')}</button>
       </div>
     `;
 
@@ -1501,10 +1699,14 @@
 
   function renderProgram(){
     const el = document.getElementById('viewProgram');
-    let html = `<button class="gt-editbtn" id="editOnb">⚙️ تعديل أيام التمرين وتاريخ البداية</button>`;
+    const p = currentProfile();
+    const expLabel = p.exp==='new' ? t('expNew') : (p.exp==='active' ? t('expActive') : t('expReturning'));
+    let html = `<button class="gt-editbtn" id="editOnb">${t('editSettings')}</button>`;
     html += `
       <div class="gt-levelinfo">
-        📌 البرنامج مستمر بدون نهاية: يبدأ بالتأسيس (فل بودي) ٣ أسابيع، ثم ينتقل تلقائياً لتقسيم علوي/سفلي، وبعدها — مع استمرارك والتزامك — يتطور لتقسيم Push/Pull/Legs المتقدم ويستمر بالدوران والتطور معك.
+        📌 ${isAr()
+          ? `البرنامج مبني على حالتك (${expLabel}) وعمرك: مرحلة التأسيس (فل بودي) ${p.foundationWeeks} أسابيع، ثم ينتقل تلقائياً لتقسيم علوي/سفلي، وبعدها — مع استمرارك والتزامك — يتطور لتقسيم Push/Pull/Legs المتقدم ويستمر بالدوران والتطور معك بدون توقف.`
+          : `Your program is built around your status (${expLabel}) and age: a ${p.foundationWeeks}-week foundation (full body) phase, then automatically moving to an upper/lower split, then — as you stay consistent — advancing to Push/Pull/Legs, cycling and evolving with you without stopping.`}
       </div>
     `;
     html += `<div class="gt-proglist">`;
@@ -1513,27 +1715,27 @@
       const d = addDays(today, i);
       const info = getDayInfo(d);
       const isToday = i===0;
-      let tag = `<span class="gt-tag rest">قبل البداية</span>`;
+      let tag = `<span class="gt-tag rest">${t('beforeStartTag')}</span>`;
       if (info && !info.before){
         tag = info.isTraining
-          ? `<span class="gt-tag workout">${WORKOUTS[info.workoutType].title}</span>`
-          : `<span class="gt-tag rest">راحة</span>`;
+          ? `<span class="gt-tag workout">${wkTitle(WORKOUTS[info.workoutType])}</span>`
+          : `<span class="gt-tag rest">${t('restTag')}</span>`;
       }
       html += `
         <div class="gt-progrow ${isToday?'today':''}">
-          <div class="l"><div class="day">${WEEKDAYS[d.getDay()]}${isToday?' (اليوم)':''}</div><div class="date">${fmtShort(d)}</div></div>
+          <div class="l"><div class="day">${weekdayLabel(d.getDay())}${isToday?` (${t('today')})`:''}</div><div class="date">${fmtShort(d)}</div></div>
           ${tag}
         </div>
       `;
     }
     html += `</div>`;
     el.innerHTML = html;
-    document.getElementById('editOnb').onclick = ()=>{ onboarding = null; render(); };
+    document.getElementById('editOnb').onclick = ()=>{ renderOnboarding(onboarding); };
   }
 
   async function renderProgress(){
     const el = document.getElementById('viewProgress');
-    el.innerHTML = `<div class="gt-card">جارٍ التحميل...</div>`;
+    el.innerHTML = `<div class="gt-card">${isAr()?'جارٍ التحميل...':'Loading...'}</div>`;
     await refreshLogsCache();
 
     let totalCompleted = 0, thisWeek = 0;
@@ -1569,24 +1771,24 @@
 
     let html = `
       <div class="gt-statgrid">
-        <div class="gt-stat"><div class="v">${totalCompleted}</div><div class="l">تمارين مكتملة</div></div>
-        <div class="gt-stat"><div class="v">${streak}</div><div class="l">سلسلة متتالية</div></div>
-        <div class="gt-stat"><div class="v">${thisWeek}</div><div class="l">هذا الأسبوع</div></div>
-        <div class="gt-stat"><div class="v">${weightData.length ? weightData[weightData.length-1].w : '-'}</div><div class="l">آخر وزن (كغ)</div></div>
+        <div class="gt-stat"><div class="v">${totalCompleted}</div><div class="l">${t('statsCompleted')}</div></div>
+        <div class="gt-stat"><div class="v">${streak}</div><div class="l">${t('statsStreak')}</div></div>
+        <div class="gt-stat"><div class="v">${thisWeek}</div><div class="l">${t('statsWeek')}</div></div>
+        <div class="gt-stat"><div class="v">${weightData.length ? weightData[weightData.length-1].w : '-'}</div><div class="l">${t('statsLastWeight')}</div></div>
       </div>
       <div class="gt-card">
-        <h3>📊 تحليل الأداء</h3>
+        <h3>${t('perfAnalysis')}</h3>
     `;
     if (!trends.length){
-      html += `<div class="gt-hint">بعد كم تمرين، بيظهر هنا تحليل لأدائك وأي تمرين يحتاج تصحيح.</div>`;
+      html += `<div class="gt-hint">${t('perfEmpty')}</div>`;
     } else {
-      trends.forEach(t=>{
+      trends.forEach(tr=>{
         html += `
           <div class="gt-trendrow">
-            <div class="gt-trendicon">${t.icon}</div>
+            <div class="gt-trendicon">${tr.icon}</div>
             <div style="flex:1;">
-              <div class="tl">${t.name}</div>
-              <div class="ttip">${t.tip}</div>
+              <div class="tl">${exName(tr.name)}</div>
+              <div class="ttip">${tr.tip}</div>
             </div>
           </div>
         `;
@@ -1596,10 +1798,10 @@
 
     html += `
       <div class="gt-card">
-        <h3>تسجيل الوزن</h3>
+        <h3>${t('weightLog')}</h3>
         <div class="gt-weightrow">
-          <input type="number" id="weightInput" placeholder="الوزن اليوم (كغ)" value="${onboarding.weight||''}"/>
-          <button id="addWeightBtn">حفظ</button>
+          <input type="number" id="weightInput" placeholder="${t('weightPlaceholder')}" value="${onboarding.weight||''}"/>
+          <button id="addWeightBtn">${t('save')}</button>
         </div>
     `;
     if (weightData.length){
@@ -1614,7 +1816,7 @@
       });
       html += `</div>`;
     } else {
-      html += `<div class="gt-hint">سجّل وزنك أسبوعياً لمتابعة تقدمك.</div>`;
+      html += `<div class="gt-hint">${t('weightHint')}</div>`;
     }
     html += `</div>`;
 
@@ -1630,10 +1832,10 @@
 
   async function renderHistory(){
     const el = document.getElementById('viewHistory');
-    el.innerHTML = `<div class="gt-card">جارٍ التحميل...</div>`;
+    el.innerHTML = `<div class="gt-card">${isAr()?'جارٍ التحميل...':'Loading...'}</div>`;
     await refreshLogsCache();
     if (!allLogsCache.length){
-      el.innerHTML = `<div class="gt-card gt-restcard"><div class="em">📋</div><h3>لا يوجد سجل بعد</h3><p>ابدأ تمرين اليوم وسيظهر هنا.</p></div>`;
+      el.innerHTML = `<div class="gt-card gt-restcard"><div class="em">📋</div><h3>${t('noHistory')}</h3><p>${t('noHistoryMsg')}</p></div>`;
       return;
     }
     let html = '';
@@ -1642,44 +1844,73 @@
       const d = new Date(l.date);
       html += `
         <div class="gt-histrow">
-          <div class="l"><div class="t">${wk ? wk.title : l.data.workoutType}</div><div class="d">${fmtLong(d)}</div></div>
-          <span class="status ${l.data.completed?'ok':'no'}">${l.data.completed ? 'مكتمل ✓' : 'غير مكتمل'}</span>
+          <div class="l"><div class="t">${wk ? wkTitle(wk) : l.data.workoutType}</div><div class="d">${fmtLong(d)}</div></div>
+          <span class="status ${l.data.completed?'ok':'no'}">${l.data.completed ? t('completed') : t('notCompleted')}</span>
         </div>
       `;
     });
     el.innerHTML = html;
   }
 
-  function renderOnboarding(){
+  function renderOnboarding(editData){
     const todayStr = toKey(new Date());
+    const isEdit = !!editData;
+    const startVal = editData ? editData.startDate : todayStr;
+    const daysVal = editData ? editData.days : DEFAULT_DAYS;
+    const heightVal = editData ? editData.height : 180;
+    const weightVal = editData ? editData.weight : 110;
+    const ageVal = editData ? editData.age : 41;
+    const expVal = editData ? (editData.experience || 'returning') : 'returning';
+
+    ROOT.classList.toggle('ltr', LANG==='en');
+    const EXPERIENCE_OPTIONS = [
+      { key:'new', label:t('expNew'), hint:t('expNewHint') },
+      { key:'returning', label:t('expReturning'), hint:t('expReturningHint') },
+      { key:'active', label:t('expActive'), hint:t('expActiveHint') },
+    ];
+
     ROOT.innerHTML = `
       <div class="gt-onb">
-        <h2>يلا نرجع للحديد 💪</h2>
-        <p class="lead">جاوب على كذا سؤال بسيط، وبنجهزلك برنامج كامل يستمر معك ويتطور مع تقدمك.</p>
+        <div style="text-align:${isAr()?'left':'right'}; margin-bottom:6px;">
+          <button class="gt-langbtn" id="langBtn2">${isAr() ? 'EN' : 'عربي'}</button>
+        </div>
+        <h2>${isEdit ? t('editTitle') : t('welcomeTitle')}</h2>
+        <p class="lead">${isEdit ? t('editLead') : t('welcomeLead')}</p>
 
         <div class="gt-field">
-          <label>تاريخ بداية البرنامج</label>
-          <input type="date" id="fStart" value="${todayStr}"/>
+          <label>${t('startDateLabel')}</label>
+          <input type="date" id="fStart" value="${startVal}"/>
+          ${isEdit ? `<div class="gt-hint">${t('editDateHint')}</div>` : ''}
         </div>
 
         <div class="gt-field">
-          <label>أيام التمرين في الأسبوع (يفضّل 3 أيام بالبداية)</label>
-          <div class="gt-daychips" id="dayChips">
-            ${WEEKDAYS.map((name,idx)=>`<div class="gt-chip ${DEFAULT_DAYS.includes(idx)?'sel':''}" data-day="${idx}">${name}</div>`).join('')}
+          <label>${t('closestDesc')}</label>
+          <div class="gt-daychips" id="expChips">
+            ${EXPERIENCE_OPTIONS.map(o=>`<div class="gt-chip ${expVal===o.key?'sel':''}" data-exp="${o.key}" style="display:block; margin-bottom:6px;"><b>${o.label}</b><br><span style="font-size:11px; opacity:.75;">${o.hint}</span></div>`).join('')}
           </div>
-          <div class="gt-hint">أول 3 أسابيع تمرين "فل بودي"، بعدها تقسيم علوي/سفلي، وبعدها Push/Pull/Legs — البرنامج يستمر ويتطور معك بدون توقف.</div>
+        </div>
+
+        <div class="gt-field">
+          <label>${t('trainingDaysLabel')}</label>
+          <div class="gt-daychips" id="dayChips">
+            ${WEEKDAYS.map((name,idx)=>`<div class="gt-chip ${daysVal.includes(idx)?'sel':''}" data-day="${idx}">${weekdayLabel(idx)}</div>`).join('')}
+          </div>
+          <div class="gt-hint">${t('programHint')}</div>
         </div>
 
         <div class="gt-row2">
-          <div class="gt-field"><label>الطول (سم)</label><input type="number" id="fHeight" value="180"/></div>
-          <div class="gt-field"><label>الوزن (كغ)</label><input type="number" id="fWeight" value="110"/></div>
-          <div class="gt-field"><label>العمر</label><input type="number" id="fAge" value="41"/></div>
+          <div class="gt-field"><label>${t('height')}</label><input type="number" id="fHeight" value="${heightVal}"/></div>
+          <div class="gt-field"><label>${t('weight')}</label><input type="number" id="fWeight" value="${weightVal}"/></div>
+          <div class="gt-field"><label>${t('age')}</label><input type="number" id="fAge" value="${ageVal}"/></div>
         </div>
 
-        <button class="gt-startbtn" id="startBtn">ابدأ البرنامج</button>
+        <button class="gt-startbtn" id="startBtn">${isEdit ? t('saveEditBtn') : t('startBtn')}</button>
+        ${isEdit ? `<button class="gt-editbtn" id="cancelEditBtn" style="width:100%; margin-top:10px; text-align:center;">${t('cancelBtn')}</button>` : ''}
       </div>
     `;
-    let selectedDays = [...DEFAULT_DAYS];
+    document.getElementById('langBtn2').onclick = ()=>{ setLang(isAr() ? 'en' : 'ar'); renderOnboarding(editData); };
+    let selectedDays = [...daysVal];
+    let selectedExp = expVal;
     document.querySelectorAll('#dayChips .gt-chip').forEach(chip=>{
       chip.onclick = ()=>{
         const d = parseInt(chip.dataset.day);
@@ -1692,14 +1923,23 @@
         }
       };
     });
+    document.querySelectorAll('#expChips .gt-chip').forEach(chip=>{
+      chip.onclick = ()=>{
+        selectedExp = chip.dataset.exp;
+        document.querySelectorAll('#expChips .gt-chip').forEach(c=>c.classList.toggle('sel', c===chip));
+      };
+    });
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) cancelBtn.onclick = ()=>{ render(); };
     document.getElementById('startBtn').onclick = async ()=>{
-      if (!selectedDays.length){ alert('اختر يوم تمرين واحد على الأقل'); return; }
+      if (!selectedDays.length){ alert(t('chooseOneDay')); return; }
       const data = {
         startDate: document.getElementById('fStart').value || todayStr,
         days: selectedDays,
         height: document.getElementById('fHeight').value,
         weight: document.getElementById('fWeight').value,
         age: document.getElementById('fAge').value,
+        experience: selectedExp,
       };
       await saveOnboarding(data);
       render();
@@ -1719,35 +1959,40 @@
   }
 
   function renderLogin(errorMsg){
+    ROOT.classList.toggle('ltr', LANG==='en');
     ROOT.innerHTML = `
       <div class="gt-onb">
-        <h2>تسجيل الدخول 🔐</h2>
-        <p class="lead">هذا التطبيق خاص — سجّل دخولك بالحساب اللي انسوّى لك.</p>
+        <div style="text-align:${isAr()?'left':'right'}; margin-bottom:6px;">
+          <button class="gt-langbtn" id="langBtn3">${isAr() ? 'EN' : 'عربي'}</button>
+        </div>
+        <h2>${t('loginTitle')}</h2>
+        <p class="lead">${t('loginLead')}</p>
         ${errorMsg ? `<div class="gt-hint" style="color:var(--warn); margin-bottom:14px;">${errorMsg}</div>` : ''}
         <div class="gt-field">
-          <label>البريد الإلكتروني</label>
+          <label>${t('email')}</label>
           <input type="email" id="loginEmail" placeholder="you@example.com"/>
         </div>
         <div class="gt-field">
-          <label>كلمة المرور</label>
+          <label>${t('password')}</label>
           <input type="password" id="loginPassword" placeholder="••••••••"/>
         </div>
-        <button class="gt-startbtn" id="loginBtn">دخول</button>
-        <div class="gt-hint" style="margin-top:14px;">ما عندك حساب؟ تواصل مع مدير التطبيق يضيفك.</div>
+        <button class="gt-startbtn" id="loginBtn">${t('loginBtn')}</button>
+        <div class="gt-hint" style="margin-top:14px;">${t('noAccount')}</div>
       </div>
     `;
+    document.getElementById('langBtn3').onclick = ()=>{ setLang(isAr() ? 'en' : 'ar'); renderLogin(errorMsg); };
     document.getElementById('loginBtn').onclick = async ()=>{
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
-      if (!email || !password){ renderLogin('عبي البريد وكلمة المرور.'); return; }
+      if (!email || !password){ renderLogin(t('fillFields')); return; }
       const btn = document.getElementById('loginBtn');
-      btn.textContent = 'جارٍ الدخول...'; btn.disabled = true;
+      btn.textContent = t('loggingIn'); btn.disabled = true;
       try{
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error || !data.user){ renderLogin('بيانات الدخول غير صحيحة.'); return; }
+        if (error || !data.user){ renderLogin(t('wrongCreds')); return; }
         currentUser = data.user;
         await bootApp();
-      }catch(e){ renderLogin('صار خطأ، حاول مرة ثانية.'); }
+      }catch(e){ renderLogin(t('loginError')); }
     };
   }
 
@@ -1765,6 +2010,10 @@
   }
 
   (async function init(){
+    try{
+      const r = await safeGet('lang');
+      if (r && (r.value === 'en' || r.value === 'ar')) LANG = r.value;
+    }catch(e){}
     if (CLOUD_ENABLED && supabase){
       const restored = await tryRestoreSession();
       if (restored){ await bootApp(); }
