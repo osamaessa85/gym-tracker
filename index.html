@@ -68,11 +68,11 @@
 }
 .gt-tab{
   flex:1; background:none; border:none; color:var(--text-faint);
-  font-family:'Tajawal',sans-serif; font-size:10.5px; font-weight:700;
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  padding:7px 1px; border-radius:10px; cursor:pointer;
+  font-family:'Tajawal',sans-serif; font-size:9.5px; font-weight:700;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:6px 1px; border-radius:10px; cursor:pointer;
 }
-.gt-tab .ic{font-size:18px; line-height:1;}
+.gt-tab .ic{font-size:16px; line-height:1;}
 .gt-tab.active{color:var(--ember); background:var(--ember-glow);}
 
 .gt-view{padding:16px; display:none; animation:fadeIn .25s ease;}
@@ -408,6 +408,64 @@
     return { foundationWeeks, level3WeekMin, level3SessionsMin, incrementScale, exp, age };
   }
   function currentProfile(){ return computeProfile(onboarding); }
+
+  const FOOD_SOURCES = {
+    ar: {
+      protein: ['صدر دجاج','سمك وتونة','بيض','لحم أحمر قليل الدهن','زبادي يوناني','جبن قريش','عدس وحمص'],
+      carbs: ['أرز بني','شوفان','بطاطا/بطاطا حلوة','خبز أسمر','كينوا','فواكه طازجة'],
+      fat: ['زيت زيتون','أفوكادو','مكسرات نيئة','سمك سلمون','طحينة'],
+      veg: ['خضار ورقية','بروكلي','خيار وطماطم','فلفل ملون','سلطة متنوعة'],
+    },
+    en: {
+      protein: ['Chicken breast','Fish & tuna','Eggs','Lean red meat','Greek yogurt','Cottage cheese','Lentils & chickpeas'],
+      carbs: ['Brown rice','Oats','Potato/sweet potato','Whole wheat bread','Quinoa','Fresh fruit'],
+      fat: ['Olive oil','Avocado','Raw nuts','Salmon','Tahini'],
+      veg: ['Leafy greens','Broccoli','Cucumber & tomato','Bell peppers','Mixed salad'],
+    },
+  };
+
+  // ================= Nutrition calculator =================
+  // Mifflin-St Jeor BMR, activity-scaled by training days/level, then
+  // adjusted for the stated goal. All numbers are general estimates for
+  // guidance, not medical advice (shown to the person as a disclaimer).
+  async function computeNutrition(){
+    const ob = onboarding;
+    if (!ob) return null;
+    let weight = parseFloat(ob.weight) || 70;
+    // prefer the most recently logged weight if available
+    try{
+      const r = await safeGet('weightlog');
+      const log = r ? JSON.parse(r.value) : [];
+      if (log.length) weight = log[log.length-1].w;
+    }catch(e){}
+    const height = parseFloat(ob.height) || 175;
+    const age = parseInt(ob.age) || 30;
+    const gender = ob.gender || 'male';
+    const goal = ob.goal || 'lose';
+    const daysPerWeek = (ob.days || []).length || 3;
+
+    let bmr = gender === 'female'
+      ? (10*weight + 6.25*height - 5*age - 161)
+      : (10*weight + 6.25*height - 5*age + 5);
+
+    const activityMult = daysPerWeek >= 5 ? 1.55 : (daysPerWeek >= 3 ? 1.4 : 1.25);
+    let tdee = bmr * activityMult;
+
+    let calories = tdee;
+    if (goal === 'lose') calories = tdee - 450;
+    else if (goal === 'gain') calories = tdee + 300;
+    calories = Math.round(calories/10)*10;
+
+    const proteinPerKg = goal === 'gain' ? 2.0 : 1.8;
+    const proteinG = Math.round(weight * proteinPerKg);
+    const fatG = Math.round((calories * 0.28) / 9);
+    const proteinCal = proteinG * 4;
+    const fatCal = fatG * 9;
+    const carbsG = Math.max(0, Math.round((calories - proteinCal - fatCal) / 4));
+    const waterL = Math.round(weight * 0.035 * 10) / 10;
+
+    return { calories, proteinG, carbsG, fatG, waterL, weight, goal };
+  }
 
 
   // ================= Illustrated technique diagrams =================
@@ -996,6 +1054,17 @@
       progLevel1:'المستوى ١ · تأسيس', progLevel2:'المستوى ٢ · بناء (علوي/سفلي)', progLevel3:'المستوى ٣ · تقدم (Push/Pull/Legs)',
       week:'الأسبوع', restTag:'راحة', beforeStartTag:'قبل البداية',
       chestCat:'صدر', backCat:'ظهر', shouldersCat:'كتف', armsCat:'ذراع', legsCat:'رجل', coreCat:'بطن',
+      genderLabel:'الجنس', genderMale:'ذكر', genderFemale:'أنثى',
+      goalLabel:'هدفك من التمرين', goalLose:'خسارة دهون', goalLoseHint:'عجز سعرات معتدل مع بروتين عالي',
+      goalGain:'بناء عضل', goalGainHint:'فائض سعرات بسيط لدعم النمو العضلي',
+      goalMaintain:'الحفاظ على اللياقة', goalMaintainHint:'سعرات متوازنة لثبات الوزن',
+      tabNutrition:'التغذية', nutritionTitle:'احتياجك الغذائي اليومي',
+      nutritionBasedOn:'محسوب بناءً على وزنك الحالي وعمرك وهدفك ومستوى نشاطك',
+      calories:'السعرات', protein:'بروتين', carbs:'كارب', fat:'دهون', water:'الماء المقترح',
+      proteinSources:'مصادر البروتين', carbSources:'مصادر الكارب', fatSources:'مصادر الدهون الصحية', vegSources:'خضار وألياف',
+      mealTiming:'💡 توزيع الوجبات', mealTimingTip:'وزّع البروتين على ٣-٤ وجبات باليوم بدل تركيزه بوجبة وحدة — يساعد على بناء العضل والشبع.',
+      nutritionDisclaimer:'هذي تقديرات عامة للتوجيه، مو استشارة طبية أو غذائية متخصصة. لو عندك حالة صحية معينة، راجع أخصائي تغذية.',
+      updateWeightHint:'الحساب يتحدث تلقائياً كل ما تسجل وزن جديد بتبويب "التقدم".',
     },
     en: {
       appName:'Back to Iron Program', tagline:'Your personal trainer, on your phone',
@@ -1033,6 +1102,17 @@
       progLevel1:'Level 1 · Foundation', progLevel2:'Level 2 · Build (Upper/Lower)', progLevel3:'Level 3 · Advance (Push/Pull/Legs)',
       week:'Week', restTag:'Rest', beforeStartTag:'Before start',
       chestCat:'Chest', backCat:'Back', shouldersCat:'Shoulders', armsCat:'Arms', legsCat:'Legs', coreCat:'Core',
+      genderLabel:'Gender', genderMale:'Male', genderFemale:'Female',
+      goalLabel:'Your training goal', goalLose:'Fat loss', goalLoseHint:'Moderate calorie deficit with high protein',
+      goalGain:'Build muscle', goalGainHint:'Small calorie surplus to support muscle growth',
+      goalMaintain:'Stay fit / maintain', goalMaintainHint:'Balanced calories to hold your weight steady',
+      tabNutrition:'Nutrition', nutritionTitle:'Your Daily Nutrition Needs',
+      nutritionBasedOn:"Based on your current weight, age, goal, and activity level",
+      calories:'Calories', protein:'Protein', carbs:'Carbs', fat:'Fat', water:'Suggested water',
+      proteinSources:'Protein sources', carbSources:'Carb sources', fatSources:'Healthy fat sources', vegSources:'Veggies & fiber',
+      mealTiming:'💡 Meal distribution', mealTimingTip:'Spread your protein across 3-4 meals a day instead of one big meal — helps with muscle building and fullness.',
+      nutritionDisclaimer:"These are general estimates for guidance, not medical or specialized dietary advice. If you have a specific health condition, consult a nutrition professional.",
+      updateWeightHint:'This updates automatically whenever you log a new weight in the "Progress" tab.',
     },
   };
   function t(key){ return (UI[LANG] && UI[LANG][key] !== undefined) ? UI[LANG][key] : (UI.ar[key] || key); }
@@ -1375,12 +1455,14 @@
       <div class="gt-view active" id="viewToday"></div>
       <div class="gt-view" id="viewProgram"></div>
       <div class="gt-view" id="viewLibrary"></div>
+      <div class="gt-view" id="viewNutrition"></div>
       <div class="gt-view" id="viewProgress"></div>
       <div class="gt-view" id="viewHistory"></div>
       <div class="gt-tabs">
         <button class="gt-tab" data-tab="today"><span class="ic">🏋️</span>${t('tabToday')}</button>
         <button class="gt-tab" data-tab="program"><span class="ic">📅</span>${t('tabProgram')}</button>
         <button class="gt-tab" data-tab="library"><span class="ic">📖</span>${t('tabLibrary')}</button>
+        <button class="gt-tab" data-tab="nutrition"><span class="ic">🍎</span>${t('tabNutrition')}</button>
         <button class="gt-tab" data-tab="progress"><span class="ic">📈</span>${t('tabProgress')}</button>
         <button class="gt-tab" data-tab="history"><span class="ic">🗂️</span>${t('tabHistory')}</button>
       </div>
@@ -1400,11 +1482,13 @@
     document.getElementById('viewToday').classList.toggle('active', activeTab==='today');
     document.getElementById('viewProgram').classList.toggle('active', activeTab==='program');
     document.getElementById('viewLibrary').classList.toggle('active', activeTab==='library');
+    document.getElementById('viewNutrition').classList.toggle('active', activeTab==='nutrition');
     document.getElementById('viewProgress').classList.toggle('active', activeTab==='progress');
     document.getElementById('viewHistory').classList.toggle('active', activeTab==='history');
     if (activeTab==='today') renderToday();
     if (activeTab==='program') renderProgram();
     if (activeTab==='library') renderLibrary();
+    if (activeTab==='nutrition') renderNutrition();
     if (activeTab==='progress') renderProgress();
     if (activeTab==='history') renderHistory();
   }
@@ -1852,6 +1936,57 @@
     el.innerHTML = html;
   }
 
+  async function renderNutrition(){
+    const el = document.getElementById('viewNutrition');
+    el.innerHTML = `<div class="gt-card">${isAr()?'جارٍ الحساب...':'Calculating...'}</div>`;
+    const n = await computeNutrition();
+    if (!n){ el.innerHTML = ''; return; }
+    const foods = isAr() ? FOOD_SOURCES.ar : FOOD_SOURCES.en;
+
+    let html = `
+      <div class="gt-card">
+        <h3>${t('nutritionTitle')}</h3>
+        <div class="gt-hint" style="margin-bottom:14px;">${t('nutritionBasedOn')} (${n.weight}${isAr()?'كغ':'kg'})</div>
+        <div class="gt-statgrid">
+          <div class="gt-stat"><div class="v">${n.calories}</div><div class="l">${t('calories')}</div></div>
+          <div class="gt-stat"><div class="v">${n.proteinG}g</div><div class="l">${t('protein')}</div></div>
+          <div class="gt-stat"><div class="v">${n.carbsG}g</div><div class="l">${t('carbs')}</div></div>
+          <div class="gt-stat"><div class="v">${n.fatG}g</div><div class="l">${t('fat')}</div></div>
+        </div>
+        <div class="gt-cardio" style="margin-top:4px;">
+          <span>💧 ${t('water')}</span>
+          <b>${n.waterL} ${isAr()?'لتر':'L'}</b>
+        </div>
+        <div class="gt-hint" style="margin-top:10px;">${t('updateWeightHint')}</div>
+      </div>
+
+      <div class="gt-card">
+        <h4 style="font-family:'Cairo',sans-serif; font-size:13px; margin-bottom:8px;">${t('proteinSources')}</h4>
+        <div class="gt-hint">${foods.protein.join(' · ')}</div>
+      </div>
+      <div class="gt-card">
+        <h4 style="font-family:'Cairo',sans-serif; font-size:13px; margin-bottom:8px;">${t('carbSources')}</h4>
+        <div class="gt-hint">${foods.carbs.join(' · ')}</div>
+      </div>
+      <div class="gt-card">
+        <h4 style="font-family:'Cairo',sans-serif; font-size:13px; margin-bottom:8px;">${t('fatSources')}</h4>
+        <div class="gt-hint">${foods.fat.join(' · ')}</div>
+      </div>
+      <div class="gt-card">
+        <h4 style="font-family:'Cairo',sans-serif; font-size:13px; margin-bottom:8px;">${t('vegSources')}</h4>
+        <div class="gt-hint">${foods.veg.join(' · ')}</div>
+      </div>
+
+      <div class="gt-card gt-cardio" style="display:block;">
+        <div style="margin-bottom:6px; font-weight:700; font-size:13px;">${t('mealTiming')}</div>
+        <div class="gt-hint">${t('mealTimingTip')}</div>
+      </div>
+
+      <div class="gt-hint" style="text-align:center; padding:0 10px;">⚠️ ${t('nutritionDisclaimer')}</div>
+    `;
+    el.innerHTML = html;
+  }
+
   function renderOnboarding(editData){
     const todayStr = toKey(new Date());
     const isEdit = !!editData;
@@ -1861,12 +1996,19 @@
     const weightVal = editData ? editData.weight : 110;
     const ageVal = editData ? editData.age : 41;
     const expVal = editData ? (editData.experience || 'returning') : 'returning';
+    const genderVal = editData ? (editData.gender || 'male') : 'male';
+    const goalVal = editData ? (editData.goal || 'lose') : 'lose';
 
     ROOT.classList.toggle('ltr', LANG==='en');
     const EXPERIENCE_OPTIONS = [
       { key:'new', label:t('expNew'), hint:t('expNewHint') },
       { key:'returning', label:t('expReturning'), hint:t('expReturningHint') },
       { key:'active', label:t('expActive'), hint:t('expActiveHint') },
+    ];
+    const GOAL_OPTIONS = [
+      { key:'lose', label:t('goalLose'), hint:t('goalLoseHint') },
+      { key:'gain', label:t('goalGain'), hint:t('goalGainHint') },
+      { key:'maintain', label:t('goalMaintain'), hint:t('goalMaintainHint') },
     ];
 
     ROOT.innerHTML = `
@@ -1891,6 +2033,13 @@
         </div>
 
         <div class="gt-field">
+          <label>${t('goalLabel')}</label>
+          <div class="gt-daychips" id="goalChips">
+            ${GOAL_OPTIONS.map(o=>`<div class="gt-chip ${goalVal===o.key?'sel':''}" data-goal="${o.key}" style="display:block; margin-bottom:6px;"><b>${o.label}</b><br><span style="font-size:11px; opacity:.75;">${o.hint}</span></div>`).join('')}
+          </div>
+        </div>
+
+        <div class="gt-field">
           <label>${t('trainingDaysLabel')}</label>
           <div class="gt-daychips" id="dayChips">
             ${WEEKDAYS.map((name,idx)=>`<div class="gt-chip ${daysVal.includes(idx)?'sel':''}" data-day="${idx}">${weekdayLabel(idx)}</div>`).join('')}
@@ -1898,6 +2047,14 @@
           <div class="gt-hint">${t('programHint')}</div>
         </div>
 
+        <div class="gt-row2">
+          <div class="gt-field"><label>${t('genderLabel')}</label>
+            <div class="gt-daychips" id="genderChips">
+              <div class="gt-chip ${genderVal==='male'?'sel':''}" data-gender="male">${t('genderMale')}</div>
+              <div class="gt-chip ${genderVal==='female'?'sel':''}" data-gender="female">${t('genderFemale')}</div>
+            </div>
+          </div>
+        </div>
         <div class="gt-row2">
           <div class="gt-field"><label>${t('height')}</label><input type="number" id="fHeight" value="${heightVal}"/></div>
           <div class="gt-field"><label>${t('weight')}</label><input type="number" id="fWeight" value="${weightVal}"/></div>
@@ -1911,6 +2068,8 @@
     document.getElementById('langBtn2').onclick = ()=>{ setLang(isAr() ? 'en' : 'ar'); renderOnboarding(editData); };
     let selectedDays = [...daysVal];
     let selectedExp = expVal;
+    let selectedGoal = goalVal;
+    let selectedGender = genderVal;
     document.querySelectorAll('#dayChips .gt-chip').forEach(chip=>{
       chip.onclick = ()=>{
         const d = parseInt(chip.dataset.day);
@@ -1929,6 +2088,18 @@
         document.querySelectorAll('#expChips .gt-chip').forEach(c=>c.classList.toggle('sel', c===chip));
       };
     });
+    document.querySelectorAll('#goalChips .gt-chip').forEach(chip=>{
+      chip.onclick = ()=>{
+        selectedGoal = chip.dataset.goal;
+        document.querySelectorAll('#goalChips .gt-chip').forEach(c=>c.classList.toggle('sel', c===chip));
+      };
+    });
+    document.querySelectorAll('#genderChips .gt-chip').forEach(chip=>{
+      chip.onclick = ()=>{
+        selectedGender = chip.dataset.gender;
+        document.querySelectorAll('#genderChips .gt-chip').forEach(c=>c.classList.toggle('sel', c===chip));
+      };
+    });
     const cancelBtn = document.getElementById('cancelEditBtn');
     if (cancelBtn) cancelBtn.onclick = ()=>{ render(); };
     document.getElementById('startBtn').onclick = async ()=>{
@@ -1940,6 +2111,8 @@
         weight: document.getElementById('fWeight').value,
         age: document.getElementById('fAge').value,
         experience: selectedExp,
+        goal: selectedGoal,
+        gender: selectedGender,
       };
       await saveOnboarding(data);
       render();
