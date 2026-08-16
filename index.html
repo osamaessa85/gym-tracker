@@ -175,6 +175,28 @@
   background:rgba(79,176,198,.08); border:1px solid rgba(79,176,198,.3);
   padding:10px 12px; border-radius:12px; margin-bottom:14px; font-size:13px;
 }
+.gt-mealcard{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:14px;
+  padding:14px; margin-bottom:12px;
+}
+.gt-mealhead{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;}
+.gt-mealhead .name{font-family:'Cairo',sans-serif; font-weight:800; font-size:14.5px;}
+.gt-mealhead .time{color:var(--text-muted); font-size:11.5px; margin-top:2px;}
+.gt-mealswap{
+  background:var(--bg-panel); border:1px solid var(--line); color:var(--steel);
+  font-size:11px; font-weight:700; padding:6px 10px; border-radius:8px; cursor:pointer; white-space:nowrap;
+}
+.gt-mealitems{list-style:none; margin:0; padding:0;}
+.gt-mealitems li{
+  display:flex; justify-content:space-between; padding:6px 0; font-size:13px;
+  border-top:1px solid var(--line);
+}
+.gt-mealitems li:first-child{border-top:none;}
+.gt-mealitems .amt{color:var(--ember); font-weight:700; font-size:12.5px;}
+.gt-mealtotal{
+  display:flex; justify-content:space-between; margin-top:10px; padding-top:10px;
+  border-top:1px dashed var(--line); font-size:12px; color:var(--text-muted);
+}
 .gt-finishbtn{
   width:100%; background:var(--ember); color:#1a0f08; border:none; padding:13px;
   border-radius:12px; font-family:'Cairo',sans-serif; font-weight:800; font-size:14.5px;
@@ -423,6 +445,101 @@
       veg: ['Leafy greens','Broccoli','Cucumber & tomato','Bell peppers','Mixed salad'],
     },
   };
+
+  // ================= Meal plan generator =================
+  // Small per-100g nutrition database for common, widely available foods.
+  // Meal templates define realistic food combinations at a baseline portion;
+  // actual grams are scaled per-person to hit their computed meal-level
+  // calorie target, so the plan is genuinely personalized, not fixed.
+  const FOOD_DB = {
+    chicken:  { ar:'صدر دجاج مشوي', en:'Grilled chicken breast', kcal:165, p:31,  c:0,  f:3.6 },
+    rice:     { ar:'أرز بني مطبوخ', en:'Cooked brown rice',      kcal:123, p:2.7, c:26, f:1 },
+    oats:     { ar:'شوفان',          en:'Oats',                   kcal:389, p:17,  c:66, f:7 },
+    egg:      { ar:'بيض',            en:'Eggs',                   kcal:155, p:13,  c:1.1,f:11 },
+    yogurt:   { ar:'زبادي يوناني',   en:'Greek yogurt',           kcal:59,  p:10,  c:3.6,f:0.4 },
+    salmon:   { ar:'سمك سلمون',      en:'Salmon',                 kcal:208, p:20,  c:0,  f:13 },
+    sweetPotato:{ ar:'بطاطا حلوة',  en:'Sweet potato',            kcal:90,  p:2,   c:21, f:0.2 },
+    oliveOil: { ar:'زيت زيتون',     en:'Olive oil',               kcal:884, p:0,   c:0,  f:100 },
+    avocado:  { ar:'أفوكادو',        en:'Avocado',                kcal:160, p:2,   c:9,  f:15 },
+    banana:   { ar:'موز',            en:'Banana',                 kcal:89,  p:1.1, c:23, f:0.3 },
+    almonds:  { ar:'لوز',            en:'Almonds',                kcal:579, p:21,  c:22, f:50 },
+    tuna:     { ar:'تونة (معلبة بالماء)', en:'Tuna (canned in water)', kcal:116, p:26, c:0, f:1 },
+    lentils:  { ar:'عدس مطبوخ',     en:'Cooked lentils',          kcal:116, p:9,   c:20, f:0.4 },
+    wwBread:  { ar:'خبز أسمر',       en:'Whole wheat bread',      kcal:247, p:13,  c:41, f:3.4 },
+    cottage:  { ar:'جبن قريش',       en:'Cottage cheese',         kcal:98,  p:11,  c:3.4,f:4.3 },
+    veg:      { ar:'خضار متنوعة (طبق جانبي)', en:'Mixed vegetables (side)', kcal:25, p:1.5, c:5, f:0.2 },
+  };
+
+  const MEAL_TEMPLATES = {
+    breakfast: {
+      share:0.25,
+      timeAr:'٧:٠٠ صباحاً', timeEn:'7:00 AM',
+      nameAr:'الإفطار', nameEn:'Breakfast',
+      options:[
+        [{k:'oats',g:60},{k:'egg',g:100},{k:'banana',g:100}],
+        [{k:'wwBread',g:80},{k:'egg',g:100},{k:'avocado',g:50}],
+      ],
+    },
+    lunch: {
+      share:0.35,
+      timeAr:'١:٠٠ ظهراً', timeEn:'1:00 PM',
+      nameAr:'الغداء', nameEn:'Lunch',
+      options:[
+        [{k:'chicken',g:180},{k:'rice',g:200},{k:'veg',g:150},{k:'oliveOil',g:10}],
+        [{k:'salmon',g:150},{k:'sweetPotato',g:250},{k:'veg',g:150},{k:'oliveOil',g:5}],
+      ],
+    },
+    snack: {
+      share:0.10,
+      timeAr:'٤:٣٠ عصراً (بعد التمرين)', timeEn:'4:30 PM (post-workout)',
+      nameAr:'سناك', nameEn:'Snack',
+      options:[
+        [{k:'yogurt',g:200},{k:'almonds',g:20}],
+        [{k:'cottage',g:150},{k:'banana',g:100}],
+      ],
+    },
+    dinner: {
+      share:0.30,
+      timeAr:'٨:٠٠ مساءً', timeEn:'8:00 PM',
+      nameAr:'العشاء', nameEn:'Dinner',
+      options:[
+        [{k:'tuna',g:150},{k:'lentils',g:200},{k:'veg',g:150}],
+        [{k:'chicken',g:150},{k:'sweetPotato',g:150},{k:'avocado',g:50}],
+      ],
+    },
+  };
+
+  function templateMacros(items){
+    let kcal=0,p=0,c=0,f=0;
+    items.forEach(it=>{
+      const food = FOOD_DB[it.k];
+      const ratio = it.g/100;
+      kcal += food.kcal*ratio; p += food.p*ratio; c += food.c*ratio; f += food.f*ratio;
+    });
+    return {kcal,p,c,f};
+  }
+
+  // per-meal chosen option index, persisted only in-memory per session
+  let mealOptionChoice = { breakfast:0, lunch:0, snack:0, dinner:0 };
+
+  function computeMealPlan(nutrition){
+    const meals = {};
+    Object.keys(MEAL_TEMPLATES).forEach(slot=>{
+      const tpl = MEAL_TEMPLATES[slot];
+      const optIdx = mealOptionChoice[slot] % tpl.options.length;
+      const items = tpl.options[optIdx];
+      const baseline = templateMacros(items);
+      const targetKcal = nutrition.calories * tpl.share;
+      const scale = baseline.kcal > 0 ? (targetKcal / baseline.kcal) : 1;
+      const scaledItems = items.map(it=>({
+        k: it.k,
+        g: Math.max(5, Math.round((it.g*scale)/5)*5),
+      }));
+      const totals = templateMacros(scaledItems);
+      meals[slot] = { tpl, optIdx, items: scaledItems, totals };
+    });
+    return meals;
+  }
 
   // ================= Nutrition calculator =================
   // Mifflin-St Jeor BMR, activity-scaled by training days/level, then
@@ -1065,6 +1182,8 @@
       mealTiming:'💡 توزيع الوجبات', mealTimingTip:'وزّع البروتين على ٣-٤ وجبات باليوم بدل تركيزه بوجبة وحدة — يساعد على بناء العضل والشبع.',
       nutritionDisclaimer:'هذي تقديرات عامة للتوجيه، مو استشارة طبية أو غذائية متخصصة. لو عندك حالة صحية معينة، راجع أخصائي تغذية.',
       updateWeightHint:'الحساب يتحدث تلقائياً كل ما تسجل وزن جديد بتبويب "التقدم".',
+      mealPlanTitle:'🍽️ خطة الوجبات اليومية', swapMeal:'🔄 بدّل الخيار', mealTotal:'المجموع',
+      grams:'جم',
     },
     en: {
       appName:'Back to Iron Program', tagline:'Your personal trainer, on your phone',
@@ -1113,6 +1232,8 @@
       mealTiming:'💡 Meal distribution', mealTimingTip:'Spread your protein across 3-4 meals a day instead of one big meal — helps with muscle building and fullness.',
       nutritionDisclaimer:"These are general estimates for guidance, not medical or specialized dietary advice. If you have a specific health condition, consult a nutrition professional.",
       updateWeightHint:'This updates automatically whenever you log a new weight in the "Progress" tab.',
+      mealPlanTitle:'🍽️ Daily Meal Plan', swapMeal:'🔄 Swap option', mealTotal:'Total',
+      grams:'g',
     },
   };
   function t(key){ return (UI[LANG] && UI[LANG][key] !== undefined) ? UI[LANG][key] : (UI.ar[key] || key); }
@@ -1961,6 +2082,11 @@
       </div>
 
       <div class="gt-card">
+        <h3>${t('mealPlanTitle')}</h3>
+        ${renderMealCards(n)}
+      </div>
+
+      <div class="gt-card">
         <h4 style="font-family:'Cairo',sans-serif; font-size:13px; margin-bottom:8px;">${t('proteinSources')}</h4>
         <div class="gt-hint">${foods.protein.join(' · ')}</div>
       </div>
@@ -1985,6 +2111,43 @@
       <div class="gt-hint" style="text-align:center; padding:0 10px;">⚠️ ${t('nutritionDisclaimer')}</div>
     `;
     el.innerHTML = html;
+    el.querySelectorAll('.gt-mealswap').forEach(btn=>{
+      btn.onclick = ()=>{
+        const slot = btn.dataset.slot;
+        mealOptionChoice[slot] = (mealOptionChoice[slot] + 1) % MEAL_TEMPLATES[slot].options.length;
+        renderNutrition();
+      };
+    });
+  }
+
+  function renderMealCards(nutrition){
+    const meals = computeMealPlan(nutrition);
+    const order = ['breakfast','lunch','snack','dinner'];
+    return order.map(slot=>{
+      const m = meals[slot];
+      const tpl = m.tpl;
+      const itemsHtml = m.items.map(it=>{
+        const food = FOOD_DB[it.k];
+        const label = isAr() ? food.ar : food.en;
+        return `<li><span>${label}</span><span class="amt">${it.g} ${t('grams')}</span></li>`;
+      }).join('');
+      return `
+        <div class="gt-mealcard">
+          <div class="gt-mealhead">
+            <div>
+              <div class="name">${isAr()?tpl.nameAr:tpl.nameEn}</div>
+              <div class="time">${isAr()?tpl.timeAr:tpl.timeEn}</div>
+            </div>
+            <button class="gt-mealswap" data-slot="${slot}">${t('swapMeal')}</button>
+          </div>
+          <ul class="gt-mealitems">${itemsHtml}</ul>
+          <div class="gt-mealtotal">
+            <span>${t('mealTotal')}</span>
+            <span>${Math.round(m.totals.kcal)} ${t('calories')} · ${Math.round(m.totals.p)}g ${t('protein')}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderOnboarding(editData){
