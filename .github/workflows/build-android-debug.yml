@@ -1,6 +1,9 @@
 name: Build Android test app
 
 on:
+  push:
+    branches:
+      - feat/capacitor-mobile
   workflow_dispatch:
 
 permissions:
