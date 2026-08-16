@@ -1,0 +1,35 @@
+name: Verify iPhone build
+
+on:
+  push:
+    branches:
+      - feat/capacitor-mobile
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator-build:
+    runs-on: macos-latest
+    steps:
+      - name: Check out the mobile branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install mobile build dependencies
+        run: npm install
+
+      - name: Prepare Capacitor iPhone project
+        run: |
+          npm run build:web
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Build for the iPhone simulator
+        working-directory: ios/App
+        run: xcodebuild -workspace App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug build CODE_SIGNING_ALLOWED=NO
