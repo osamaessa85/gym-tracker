@@ -1,0 +1,8 @@
+{
+  "appId": "com.osamaessa85.gymtracker",
+  "appName": "Gym Tracker",
+  "webDir": "mobile-web",
+  "server": {
+    "androidScheme": "https"
+  }
+}
