@@ -431,6 +431,22 @@
   }
   function currentProfile(){ return computeProfile(onboarding); }
 
+  // Extra progressive overload: as completed sessions accumulate within the
+  // current split (Level 2 or 3), add a bonus set to compound lifts —
+  // volume progression on top of the weight-suggestion progression, so the
+  // program keeps demanding more as the person gets fitter, not just heavier.
+  function sessionsInWorkoutSet(typeList){
+    return allLogsCache.filter(l => l.data.completed && typeList.includes(l.data.workoutType)).length;
+  }
+  function effectiveSets(ex, workoutType){
+    if (!COMPOUND_LIFTS.includes(ex.name)) return ex.sets;
+    let sessions = 0;
+    if (CYCLE2.includes(workoutType)) sessions = sessionsInWorkoutSet(CYCLE2);
+    else if (CYCLE3.includes(workoutType)) sessions = sessionsInWorkoutSet(CYCLE3);
+    const bonus = Math.min(2, Math.floor(sessions / 6));
+    return ex.sets + bonus;
+  }
+
   const FOOD_SOURCES = {
     ar: {
       protein: ['صدر دجاج','سمك وتونة','بيض','لحم أحمر قليل الدهن','زبادي يوناني','جبن قريش','عدس وحمص'],
@@ -549,11 +565,11 @@
     const ob = onboarding;
     if (!ob) return null;
     let weight = parseFloat(ob.weight) || 70;
-    // prefer the most recently logged weight if available
+    let weightLog = [];
     try{
       const r = await safeGet('weightlog');
-      const log = r ? JSON.parse(r.value) : [];
-      if (log.length) weight = log[log.length-1].w;
+      weightLog = r ? JSON.parse(r.value) : [];
+      if (weightLog.length) weight = weightLog[weightLog.length-1].w;
     }catch(e){}
     const height = parseFloat(ob.height) || 175;
     const age = parseInt(ob.age) || 30;
@@ -571,6 +587,24 @@
     let calories = tdee;
     if (goal === 'lose') calories = tdee - 450;
     else if (goal === 'gain') calories = tdee + 300;
+
+    // Plateau-aware adjustment: if there's at least 2 weeks of weight data
+    // and the trend contradicts the goal (not losing while trying to lose,
+    // not gaining while trying to gain), nudge calories a bit — the plan
+    // adapts to how the body is actually responding, not just a static formula.
+    let trendNote = null;
+    const twoWeeksAgo = addDays(new Date(), -14);
+    const recentEntries = weightLog.filter(e => new Date(e.date) >= twoWeeksAgo);
+    if (recentEntries.length >= 2 && goal !== 'maintain'){
+      const change = recentEntries[recentEntries.length-1].w - recentEntries[0].w;
+      if (goal === 'lose' && change > -0.3){
+        calories -= 150;
+        trendNote = isAr() ? 'وزنك شبه ثابت آخر أسبوعين، قللنا السعرات شوي لتفعيل النزول من جديد.' : "Your weight has been fairly flat for 2 weeks, so we've trimmed calories slightly to restart progress.";
+      } else if (goal === 'gain' && change < 0.3){
+        calories += 150;
+        trendNote = isAr() ? 'وزنك ما زاد آخر أسبوعين، رفعنا السعرات شوي لدعم زيادة العضل.' : "Your weight hasn't moved up in 2 weeks, so we've added a bit more to support muscle gain.";
+      }
+    }
     calories = Math.round(calories/10)*10;
 
     const proteinPerKg = goal === 'gain' ? 2.0 : 1.8;
@@ -581,7 +615,7 @@
     const carbsG = Math.max(0, Math.round((calories - proteinCal - fatCal) / 4));
     const waterL = Math.round(weight * 0.035 * 10) / 10;
 
-    return { calories, proteinG, carbsG, fatG, waterL, weight, goal };
+    return { calories, proteinG, carbsG, fatG, waterL, weight, goal, trendNote };
   }
 
 
@@ -1503,7 +1537,7 @@
     const exercises = {};
     wk.exercises.forEach(ex=>{
       const sug = suggestForExercise(ex.name, ex.reps, excludeDateKey);
-      exercises[ex.name] = Array.from({length:ex.sets}, ()=>({
+      exercises[ex.name] = Array.from({length:effectiveSets(ex, workoutType)}, ()=>({
         weight: sug ? String(sug.suggested) : '',
         reps: '',
         done:false
@@ -1784,7 +1818,7 @@
     let totalSets = 0, doneSets = 0;
     wk.exercises.forEach(ex=>{
       const arr = log.exercises[ex.name] || [];
-      totalSets += ex.sets;
+      totalSets += effectiveSets(ex, info.workoutType);
       doneSets += arr.filter(s=>s.done).length;
     });
     const pct = totalSets ? Math.round((doneSets/totalSets)*100) : 0;
@@ -1824,11 +1858,12 @@
     wk.exercises.forEach((ex, exi)=>{
       const arr = log.exercises[ex.name];
       const sug = isFresh ? suggestForExercise(ex.name, ex.reps, dateKey) : null;
+      const setsCount = effectiveSets(ex, info.workoutType);
       html += `<div class="gt-exercise">
         <div class="gt-exname">
           <span class="n">${exName(ex.name)}</span>
           <span style="display:flex; align-items:center; gap:8px;">
-            <span class="r">${ex.sets} × ${repsDisplay(ex.reps)}</span>
+            <span class="r">${setsCount} × ${repsDisplay(ex.reps)}</span>
             <button class="gt-infobtn" type="button">${t('technique')}</button>
           </span>
         </div>`;
@@ -1837,7 +1872,7 @@
           ? `<div class="gt-suggest">📊 ${isAr()?`آخر مرة ${sug.lastWeight}كغ واكتملت — 🎯 جرّب اليوم ${sug.suggested}كغ`:`Last time ${sug.lastWeight}kg, all sets hit — 🎯 try ${sug.suggested}kg today`}</div>`
           : `<div class="gt-suggest">📊 ${isAr()?`آخر مرة ${sug.lastWeight}كغ — كمّل نفس الوزن وركّز على التكرارات`:`Last time ${sug.lastWeight}kg — keep the same weight and focus on reps`}</div>`;
       }
-      for(let i=0;i<ex.sets;i++){
+      for(let i=0;i<setsCount;i++){
         const s = arr[i] || {weight:'',reps:'',done:false};
         html += `
           <div class="gt-setrow" data-ex="${exi}" data-set="${i}">
@@ -2068,6 +2103,7 @@
       <div class="gt-card">
         <h3>${t('nutritionTitle')}</h3>
         <div class="gt-hint" style="margin-bottom:14px;">${t('nutritionBasedOn')} (${n.weight}${isAr()?'كغ':'kg'})</div>
+        ${n.trendNote ? `<div class="gt-suggest" style="display:block; margin-bottom:14px;">📈 ${n.trendNote}</div>` : ''}
         <div class="gt-statgrid">
           <div class="gt-stat"><div class="v">${n.calories}</div><div class="l">${t('calories')}</div></div>
           <div class="gt-stat"><div class="v">${n.proteinG}g</div><div class="l">${t('protein')}</div></div>
