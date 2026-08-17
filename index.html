@@ -316,13 +316,21 @@
   //          repeats indefinitely — the program never "ends", it keeps rotating
   //          and the person keeps progressing weights based on logged performance.
   const WORKOUTS = {
-    full: { title:'فل بودي – تأسيس', titleEn:'Full Body – Foundation', level:1, cardio:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)', exercises:[
+    full: { title:'فل بودي – تأسيس A', titleEn:'Full Body – Foundation A', level:1, cardio:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)', exercises:[
       {name:'سكوات', sets:3, reps:'10-12'},
       {name:'بنش برس', sets:3, reps:'10-12'},
       {name:'سحب أرضي (Lat Pulldown)', sets:3, reps:'10-12'},
       {name:'رفعة ميتة رومانية', sets:3, reps:'10-12'},
       {name:'كتف بالدمبل', sets:3, reps:'10-12'},
       {name:'بلانك', sets:3, reps:'30 ثانية'},
+    ]},
+    fullB: { title:'فل بودي – تأسيس B (تنويع)', titleEn:'Full Body – Foundation B (variation)', level:1, cardio:'كارديو خفيف 15–20 دقيقة (مشي سريع / دراجة)', exercises:[
+      {name:'ليج بريس', sets:3, reps:'10-12'},
+      {name:'ضغط الصدر (Push-up)', sets:3, reps:'10-12'},
+      {name:'سحب أفقي (Seated Row)', sets:3, reps:'10-12'},
+      {name:'لنجز', sets:3, reps:'10/رجل'},
+      {name:'رفرفة جانبية', sets:3, reps:'12-15'},
+      {name:'بطن (Plank + Leg Raises)', sets:3, reps:'-'},
     ]},
     upperA: { title:'Upper A – علوي', titleEn:'Upper A', level:2, exercises:[
       {name:'بنش برس', sets:4, reps:'8-10'},
@@ -405,6 +413,7 @@
       {name:'لف روسي (Russian Twist)', sets:3, reps:'20'},
     ]},
   };
+  const CYCLE1 = ['full','fullB'];
   const CYCLE2 = ['upperA','lowerA','upperB','lowerB'];
   const CYCLE3 = ['pushA','pullA','legsA','pushB','pullB','legsB'];
   const COMPOUND_LIFTS = ['سكوات','بنش برس','رفعة ميتة رومانية','ديدليفت تقليدي (خفيف)','ليج بريس','سكوات أمامي','سكوات جوبلت (Goblet Squat)','هيب ثرست (Hip Thrust)','بنش مائل (Incline)','تجديف بالبار (Barbell Row)'];
@@ -1479,7 +1488,8 @@
     let workoutType = null;
     if (isTraining){
       if (level === 1){
-        workoutType = 'full';
+        const count = countTrainingDaysBetween(start, t);
+        workoutType = CYCLE1[(count-1+CYCLE1.length) % CYCLE1.length];
       } else if (level === 2){
         const refStart = addDays(start, p.foundationWeeks*7); // start of week after foundation
         const count = countTrainingDaysBetween(refStart, t);
