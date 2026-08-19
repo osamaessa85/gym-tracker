@@ -1311,13 +1311,20 @@
     catch(e){ supabase = null; }
   }
 
+  // cloudGet/cloudList return {ok, ...} so callers can tell "cloud confirmed
+  // this user has no data for that key" (ok:true, nothing found — must NOT
+  // fall back to another source) apart from "the request itself failed"
+  // (ok:false — safe to fall back to local storage). Conflating these two
+  // was the bug: a brand-new account's empty cloud row would silently fall
+  // through to whatever was left in localStorage from local-only testing or
+  // a previous account on the same device.
   async function cloudGet(key){
-    if (!supabase || !currentUser) return null;
+    if (!supabase || !currentUser) return { ok:false };
     try{
       const { data, error } = await supabase.from('app_data').select('value').eq('key', key).maybeSingle();
-      if (error || !data) return null;
-      return { key, value: data.value, shared:false };
-    }catch(e){ return null; }
+      if (error) return { ok:false };
+      return data ? { ok:true, value: data.value } : { ok:true, value: null };
+    }catch(e){ return { ok:false }; }
   }
   async function cloudSet(key, value){
     if (!supabase || !currentUser) throw new Error('not authenticated');
@@ -1327,14 +1334,14 @@
     return { key, value, shared:false };
   }
   async function cloudList(prefix){
-    if (!supabase || !currentUser) return { keys:[], prefix, shared:false };
+    if (!supabase || !currentUser) return { ok:false };
     try{
       let q = supabase.from('app_data').select('key');
       q = prefix ? q.like('key', prefix+'%') : q;
       const { data, error } = await q;
-      if (error) return { keys:[], prefix, shared:false };
-      return { keys: data.map(r=>r.key), prefix, shared:false };
-    }catch(e){ return { keys:[], prefix, shared:false }; }
+      if (error) return { ok:false };
+      return { ok:true, keys: data.map(r=>r.key) };
+    }catch(e){ return { ok:false }; }
   }
 
   // Storage layers, tried in order:
@@ -1359,26 +1366,36 @@
   async function safeGet(key){
     if (supabase && currentUser){
       const r = await cloudGet(key);
-      if (r) return r;
+      if (r.ok) return (r.value !== null) ? { key, value:r.value, shared:false } : null;
+      // cloud call itself failed (network etc.) — check this session's own cache before giving up
+      return (key in memStore) ? { key, value: memStore[key], shared:false } : null;
+    } else {
+      if (storageOK){
+        try{ return await window.storage.get(key); }
+        catch(e){ /* fall through */ }
+      }
+      if (lsOK){
+        try{
+          const v = window.localStorage.getItem(LS_PREFIX+key);
+          return v!==null ? { key, value:v, shared:false } : null;
+        }catch(e){ /* fall through */ }
+      }
+      return (key in memStore) ? { key, value: memStore[key], shared:false } : null;
     }
-    if (storageOK){
-      try{ return await window.storage.get(key); }
-      catch(e){ /* fall through */ }
-    }
-    if (lsOK){
-      try{
-        const v = window.localStorage.getItem(LS_PREFIX+key);
-        return v!==null ? { key, value:v, shared:false } : null;
-      }catch(e){ /* fall through */ }
-    }
-    return (key in memStore) ? { key, value: memStore[key], shared:false } : null;
+    return null;
   }
   async function safeSet(key, value){
-    memStore[key] = value;
     if (supabase && currentUser){
-      try{ return await cloudSet(key, value); }
-      catch(e){ /* fall through to local so nothing is lost */ }
+      try{
+        const r = await cloudSet(key, value);
+        memStore[key] = value; // session-scoped cache only, cleared on login/logout — never leaks across accounts
+        return r;
+      }catch(e){
+        memStore[key] = value; // keep it for this session so nothing is lost to a transient network blip
+        return { key, value, shared:false };
+      }
     }
+    memStore[key] = value;
     if (storageOK){
       try{ return await window.storage.set(key, value); }
       catch(e){ /* keep going, still try localStorage below */ }
@@ -1392,7 +1409,8 @@
   async function safeList(prefix){
     if (supabase && currentUser){
       const r = await cloudList(prefix);
-      if (r.keys.length) return r;
+      if (r.ok) return { keys:r.keys, prefix, shared:false };
+      return { keys:[], prefix, shared:false };
     }
     if (storageOK){
       try{ return await window.storage.list(prefix); }
@@ -2372,16 +2390,28 @@
       try{
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error || !data.user){ renderLogin(t('wrongCreds')); return; }
+        clearSessionState();
         currentUser = data.user;
         await bootApp();
       }catch(e){ renderLogin(t('loginError')); }
     };
   }
 
+  // Wipes every in-memory cache tied to "who is signed in", so a login or
+  // logout can never leave a trace of one account visible to the next —
+  // this is what actually closes the local-fallback leak, not just the
+  // cloud query fix above.
+  function clearSessionState(){
+    Object.keys(memStore).forEach(k=>delete memStore[k]);
+    onboarding = null;
+    allLogsCache = [];
+    completedCount = 0;
+  }
+
   async function logout(){
     if (supabase){ try{ await supabase.auth.signOut(); }catch(e){} }
     currentUser = null;
-    onboarding = null;
+    clearSessionState();
     renderLogin();
   }
 
